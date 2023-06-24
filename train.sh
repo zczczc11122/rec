@@ -1,0 +1,1 @@
+python3 -m torch.distributed.launch --npro_per_node=8 --master_port=22335 main_moco_v2_cls.py
