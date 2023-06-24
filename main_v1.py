@@ -15,8 +15,9 @@ import torch.nn.parallel
 import torch.backends.cudnn as cudnn
 import torch.optim
 import matplotlib.pyplot as plt
-from v1.dataset_v1 import
-
+from v1.dataset_v1 import ListFileDataSet
+from v1.dataset_bnn_v1 import ListFileDataSetBBN
+#######
 
 
 
