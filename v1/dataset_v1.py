@@ -137,7 +137,7 @@ class ListFileDataSet(data.Dataset):
             num_frames = len(os.listdir(v_path))
             if num_frames <= 0:
                 if self.local_rank in (0, -1):
-                    print('img path is empty', v_path)\
+                    print('img path is empty', v_path)
                 continue
             a_path = os.path.join(self.prefix_path, "audio", str(vid) + ".npy")
             if not os.path.exists(a_path):
