@@ -127,15 +127,15 @@ class VideoCNNModel(nn.Module):
                                                                 label_dict['topic'], self.args.dropout)
         elif args.classifier_type == 'hierarchicalClassifier_simple':
             self.classifier_expression = HierarchicalClassifierSimple(self.fcn_dim, 256,
-                                                                label_dict['expression'], self.args.dropout)
+                                                                   label_dict['expression'], self.args.dropout)
             self.classifier_material = HierarchicalClassifierSimple(self.fcn_dim, 256,
-                                                              label_dict['material'], self.args.dropout)
+                                                                 label_dict['material'], self.args.dropout)
             self.classifier_person = HierarchicalClassifierSimple(self.fcn_dim, 256,
-                                                            label_dict['person'], self.args.dropout)
+                                                               label_dict['person'], self.args.dropout)
             self.classifier_style = HierarchicalClassifierSimple(self.fcn_dim, 256,
-                                                           label_dict['style'], self.args.dropout)
+                                                              label_dict['style'], self.args.dropout)
             self.classifier_topic = HierarchicalClassifierSimple(self.fcn_dim, 256,
-                                                           label_dict['topic'], self.args.dropout)
+                                                              label_dict['topic'], self.args.dropout)
         else:
             raise ValueError("args.classifier_type is illegal")
         if args.fusion_type == 'concat':
@@ -163,7 +163,7 @@ class VideoCNNModel(nn.Module):
         """Encoder, Pool, Predit
             expected shape of 'features': (n_batch, 5, input_dim)
         """
-        # vision, audio, title_input_ids, title_token_type_ids, title_attention_mask, \
+        # vision, audio, title_input_ids, title_token_type_ids, title_attention_mask,\
         # ocr_input_ids, ocr_token_type_ids, ocr_attention_mask = features
 
         video_embedding = self.vision_model(vision)

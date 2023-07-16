@@ -202,30 +202,30 @@ class ListFileDataSet(data.Dataset):
             label_scene, label_style, label_expression, label_material = i
 
             if len(label_expression) == 0:
-                print('label_expression is empty', vid)
+                # print('label_expression is empty', vid)
                 continue
             if len(label_material) == 0:
-                print('label_material is empty', vid)
+                # print('label_material is empty', vid)
                 continue
             if len(label_person) == 0:
-                print('label_person is empty', vid)
+                # print('label_person is empty', vid)
                 continue
             if len(label_style) == 0:
-                print('label_style is empty', vid)
+                # print('label_style is empty', vid)
                 continue
             if len(label_scene) == 0:
-                print('label_scene is empty', vid)
+                # print('label_scene is empty', vid)
                 continue
 
             self.vid2info[str(vid)] = {}
             self.vid2info[str(vid)]['title'] = str(title)
             self.vid2info[str(vid)]['ocr'] = str(ocr)
 
-            self.vid2info[str(vid)]['ocr']['expression'] = str(label_expression[0]['name'])
-            self.vid2info[str(vid)]['ocr']['material'] = str(label_material[0]['name'])
-            self.vid2info[str(vid)]['ocr']['person'] = str(label_person[0]['name'])
-            self.vid2info[str(vid)]['ocr']['style'] = str(label_style[0]['name'])
-            self.vid2info[str(vid)]['ocr']['topic'] = str(label_scene[0]['name'])
+            self.vid2info[str(vid)]['expression'] = str(label_expression[0]['name'])
+            self.vid2info[str(vid)]['material'] = str(label_material[0]['name'])
+            self.vid2info[str(vid)]['person'] = str(label_person[0]['name'])
+            self.vid2info[str(vid)]['style'] = str(label_style[0]['name'])
+            self.vid2info[str(vid)]['topic'] = str(label_scene[0]['name'])
 
 
     def _tsn_sample_indices(self, record):

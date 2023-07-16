@@ -72,7 +72,7 @@ def parse_label(args, dims):
         label_info = eval(dim + '_label_info')
         for level in sorted(label_info.keys()):
             logger.info('Dataset {} level{} Label: {}'.
-                        format(dim, level, ' '.join(['{}_{}'.format(k, v) for k, v in label_info[level['id2cls'].items()]])))
+                        format(dim, level, ' '.join(['{}_{}'.format(k, v) for k, v in label_info[level]['id2cls'].items()])))
         logger.info("====================")
         label_dict[dim] = label_info
     return label_dict

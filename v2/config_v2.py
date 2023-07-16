@@ -106,9 +106,9 @@ parser.add_argument('--cls-loss-type', default='smoothing_loss', choices=['focal
 parser.add_argument('--train-loss-level', default='first_last_level', choices=['only_last_level', 'first_last_level', 'all'],
                     type=str, help='train loss level')
 # parser.add_argument('--use-bbn', default=False, type=bool, help='is use bbn')
-# parser.add_argument('--bbn-loss-method', default='weight_logist', choices=['weight_loss', 'weight_logist'],
+# parser.add_argument('--bbn-loss-method', default='weight_loss', choices=['weight_loss', 'weight_logist'],
 #                     type=str, help='bbn loss method')
-# parser.add_argument('--bbn-div-epoch', type=int, default=28)
+# parser.add_argument('--bbn-div-epoch', type=int, default=14)
 
 # ========================= Monitor Configs =========================
 parser.add_argument('--print-freq', '-p', default=50, type=int,

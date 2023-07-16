@@ -1,3 +1,4 @@
+import math
 import os
 #https://code.byted.org/zhaocong.zc/video_cls_template
 os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3,4,5,6,7"
@@ -95,23 +96,22 @@ def _restore_ckp():
 
 
 checkpoint = _restore_ckp()
-label_dict = parse_label(args, dim)
-
+label_dict = parse_label(args, dims)
 
 def draw_curve(current_epoch):
     global draw_flag
     x_epoch.append(current_epoch)
 
-    for i in range(len(dims) + 1):
+    for i in range(len(dims)+1):
         if i == 0:
             ax_list[i].plot(x_epoch, y_loss['train'], 'bo-', label='train')
             ax_list[i].plot(x_epoch, y_loss['val'], 'ro-', label='val')
             ax_list[i].plot(x_epoch, y_loss['test'], 'go-', label='test')
         else:
             dim = dims[i-1]
-            ax_list[i].plot(x_epoch, y_acc['train'], 'bo-', label='train')
-            ax_list[i].plot(x_epoch, y_acc['val'], 'ro-', label='val')
-            ax_list[i].plot(x_epoch, y_acc['test'], 'go-', label='test')
+            ax_list[i].plot(x_epoch, y_acc[dim]['train'], 'bo-', label='train')
+            ax_list[i].plot(x_epoch, y_acc[dim]['val'], 'ro-', label='val')
+            ax_list[i].plot(x_epoch, y_acc[dim]['test'], 'go-', label='test')
 
     if draw_flag == True:
         for ax in ax_list:
@@ -364,11 +364,11 @@ def main_worker(local_rank):
                                                      epoch_start=args.start_epoch)
     elif args.warmup_type == "WarmupAndReduceLROnPlateau":
         backbone_after_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-                                            backbone_optimizer, mode='min', factor=0.1, patience=1, verbose=False,
-                                            threshold=0.5, threshold_mode='abs', cooldown=0, min_lr=1e-06, eps=1e-06)
+            backbone_optimizer, mode='min', factor=0.1, patience=1, verbose=False,
+            threshold=0.5, threshold_mode='abs', cooldown=0, min_lr=1e-06, eps=1e-06)
         normal_after_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-                                            normal_optimizer, mode='min', factor=0.1, patience=1, verbose=False,
-                                            threshold=0.5, threshold_mode='abs', cooldown=0, min_lr=1e-06, eps=1e-06)
+            normal_optimizer, mode='min', factor=0.1, patience=1, verbose=False,
+            threshold=0.5, threshold_mode='abs', cooldown=0, min_lr=1e-06, eps=1e-06)
 
         backbone_scheduler = WarmupAndReduceLROnPlateauScheduler(optimizer=backbone_optimizer,
                                                                  num_steps_per_epoch=num_steps_per_epoch,
@@ -435,9 +435,9 @@ def main_worker(local_rank):
 
         # evaluate on validation set
         val_loss, expression_val_acc, material_val_acc, \
-        person_val_acc, style_val_acc, topic_val_acc = validate(val_loader, model, (criterion_ce, criterion_kl), epoch, "val", label_dict[args.dim]["id2cls"], local_rank)
+        person_val_acc, style_val_acc, topic_val_acc = validate(val_loader, model, (criterion_ce, criterion_kl), epoch, "val", label_dict, local_rank)
         test_loss, expression_test_acc, material_test_acc, \
-        person_test_acc, style_test_acc, topic_test_acc = validate(test_loader, model, (criterion_ce, criterion_kl), epoch, "test", label_dict[args.dim]["id2cls"], local_rank)
+        person_test_acc, style_test_acc, topic_test_acc = validate(test_loader, model, (criterion_ce, criterion_kl), epoch, "test", label_dict, local_rank)
 
         if args.warmup_type == "WarmupAndReduceLROnPlateau":
             backbone_scheduler.step(metrics=val_loss)
@@ -457,7 +457,7 @@ def main_worker(local_rank):
             draw_curve(epoch)
 
             is_best = val_loss < best_loss
-            best_loss = max(val_loss, best_loss)
+            best_loss = min(val_loss, best_loss)
             if is_best:
                 best_epoch = epoch
             _save_checkpoint({'epoch': epoch + 1, 'arch': args.arch,
@@ -581,22 +581,22 @@ def train(train_loader, model, criterions, optimizers, schedulers, epoch, local_
                         'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
                         'Data {data_time.val:.3f} ({data_time.avg:.3f})\t'
                         'Loss {losses.val:.4f} ({losses.avg:.4f})\t'
-                        'Acc expression {expression_acces.val:.3f}({expression_acces.avg:.3f})\t'
-                        'Acc material {material_acces.val:.3f}({material_acces.avg:.3f})\t'
-                        'Acc person {person_acces.val:.3f}({person_acces.avg:.3f})\t'
-                        'Acc style {style_acces.val:.3f}({style_acces.avg:.3f})\t'
-                        'Acc topic {topic_acces.val:.3f}({topic_acces.avg:.3f})'.format(epoch=epoch, step=step, len=len(train_loader),
-                                                                      batch_size=batch_size, local_rank=local_rank, nprocs=args.nprocs,
-                                                                      b_lr=optimizers[0].param_groups[-1]['lr'],
-                                                                      n_lr=optimizers[1].param_groups[-1]['lr'],
-                                                                      batch_time=batch_time,
-                                                                      data_time=data_time,
-                                                                      losses=losses,
-                                                                      expression_acces=expression_acces,
-                                                                      material_acces=material_acces,
-                                                                      person_acces=person_acces,
-                                                                      style_acces=style_acces,
-                                                                      topic_acces=topic_acces))
+                        'Acc expression {expression_acces.val:.3f} ({expression_acces.avg:.3f})\t'
+                        'Acc material {material_acces.val:.3f} ({material_acces.avg:.3f})\t'
+                        'Acc person {person_acces.val:.3f} ({person_acces.avg:.3f})\t'
+                        'Acc style {style_acces.val:.3f} ({style_acces.avg:.3f})\t'
+                        'Acc topic {topic_acces.val:.3f} ({topic_acces.avg:.3f})'.format(epoch=epoch, step=step, len=len(train_loader),
+                                                                       batch_size=batch_size, local_rank=local_rank, nprocs=args.nprocs,
+                                                                       b_lr=optimizers[0].param_groups[-1]['lr'],
+                                                                       n_lr=optimizers[1].param_groups[-1]['lr'],
+                                                                       batch_time=batch_time,
+                                                                       data_time=data_time,
+                                                                       losses=losses,
+                                                                       expression_acces=expression_acces,
+                                                                       material_acces=material_acces,
+                                                                       person_acces=person_acces,
+                                                                       style_acces=style_acces,
+                                                                       topic_acces=topic_acces))
 
         #           break
     return losses.avg, expression_acces.avg, material_acces.avg, person_acces.avg, style_acces.avg, topic_acces.avg
@@ -655,8 +655,8 @@ def validate(val_loader, model, criterions, epoch, data_type, label_dict, local_
                 dim_pred_softmax = torch.softmax(dim_predict[-1], dim=1)
                 dim_pred_probs, dim_pred_tags = torch.max(dim_pred_softmax, dim=1)
                 eval(f"{dim}_target_list").extend(dim_label[-1].cpu().numpy().tolist())
-                eval(f"{dim}_pred_tag_list").extend(dim_pred_tags[-1].cpu().numpy().tolist())
-                eval(f"{dim}_pred_prob_list").extend(dim_pred_probs[-1].cpu().numpy().tolist())
+                eval(f"{dim}_pred_tag_list").extend(dim_pred_tags.cpu().numpy().tolist())
+                eval(f"{dim}_pred_prob_list").extend(dim_pred_probs.cpu().numpy().tolist())
 
                 dim_acc = multi_acc(dim_predict[-1], dim_label[-1])
                 eval(f"{dim}_acces").update(dim_acc, batch_size)
@@ -713,66 +713,66 @@ def validate(val_loader, model, criterions, epoch, data_type, label_dict, local_
 
                 target_list_tensor = torch.tensor([int(i) for i in eval(f"{dim}_target_list")], dtype=torch.long).cuda(local_rank)
                 pred_tag_list_tensor = torch.tensor([int(i) for i in eval(f"{dim}_pred_tag_list")], dtype=torch.long).cuda(local_rank)
-                pred_prob_list_tensor = torch.tensor([int(i) for i in eval(f"{dim}_preb_prob_list")], dtype=torch.float32).cuda(local_rank)
+                pred_prob_list_tensor = torch.tensor([float(i) for i in eval(f"{dim}_pred_prob_list")], dtype=torch.float32).cuda(local_rank)
 
                 predict_info[dim] = {}
                 predict_info[dim]['target_list'] = all_gather(target_list_tensor, args.nprocs, local_rank).cpu().numpy().tolist()
                 predict_info[dim]['pred_tag_list'] = all_gather(pred_tag_list_tensor, args.nprocs, local_rank).cpu().numpy().tolist()
-                predict_info[dim]['preb_prob_list'] = all_gather(pred_prob_list_tensor, args.nprocs, local_rank).cpu().numpy().tolist()
+                predict_info[dim]['pred_prob_list'] = all_gather(pred_prob_list_tensor, args.nprocs, local_rank).cpu().numpy().tolist()
 
         else:
             for dim in dims:
                 predict_info[dim] = {}
                 predict_info[dim]['target_list'] = eval(f"{dim}_target_list")
                 predict_info[dim]['pred_tag_list'] = eval(f"{dim}_pred_tag_list")
-                predict_info[dim]['preb_prob_list'] = eval(f"{dim}_pred_prob_list")
+                predict_info[dim]['pred_prob_list'] = eval(f"{dim}_pred_prob_list")
 
         logger.info('{data_type}: [{epoch}/{total_epoch}]\t'
                     'batch: {batch_size} local_rank/nprocs: {local_rank}/{nprocs}\t'
                     'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
                     'Loss {losses.val:.4f} ({losses.avg:.4f})\t'
-                    'Acc expression {expression_acces.val:.3f}({expression_acces.avg:.3f})\t'
-                    'Acc material {material_acces.val:.3f}({material_acces.avg:.3f})\t'
-                    'Acc person {person_acces.val:.3f}({person_acces.avg:.3f})\t'
-                    'Acc style {style_acces.val:.3f}({style_acces.avg:.3f})\t'
-                    'Acc topic {topic_acces.val:.3f}({topic_acces.avg:.3f})'.format(data_type=data_type, epoch=epoch, total_epoch=args.epochs,
-                                                                                    batch_size=batch_size, local_rank=local_rank,
-                                                                                    nprocs=args.nprocs,
-                                                                                    batch_time=batch_time,
-                                                                                    losses=losses,
-                                                                                    expression_acces=expression_acces,
-                                                                                    material_acces=material_acces,
-                                                                                    person_acces=person_acces,
-                                                                                    style_acces=style_acces,
-                                                                                    topic_acces=topic_acces))
+                    'Acc expression {expression_acces.val:.3f} ({expression_acces.avg:.3f})\t'
+                    'Acc material {material_acces.val:.3f} ({material_acces.avg:.3f})\t'
+                    'Acc person {person_acces.val:.3f} ({person_acces.avg:.3f})\t'
+                    'Acc style {style_acces.val:.3f} ({style_acces.avg:.3f})\t'
+                    'Acc topic {topic_acces.val:.3f} ({topic_acces.avg:.3f})'.format(data_type=data_type, epoch=epoch, total_epoch=args.epochs,
+                                                                                     batch_size=batch_size, local_rank=local_rank,
+                                                                                     nprocs=args.nprocs,
+                                                                                     batch_time=batch_time,
+                                                                                     losses=losses,
+                                                                                     expression_acces=expression_acces,
+                                                                                     material_acces=material_acces,
+                                                                                     person_acces=person_acces,
+                                                                                     style_acces=style_acces,
+                                                                                     topic_acces=topic_acces))
     if args.dist_type != "ddp" or local_rank == 0:
         logger.info(f'{data_type} Results: '
-                    f'Acc expression {expression_acces.val:.3f}'
-                    f'Acc material {material_acces.val:.3f}'
-                    f'Acc person {person_acces.val:.3f}'
-                    f'Acc style {style_acces.val:.3f}'
-                    f'Acc topic {topic_acces.val:.3f}'
-                    f'Loss {losses.avg:.5f}')
+                    f'Acc expression {expression_acces.avg:.3f}'
+                    f'Acc material {material_acces.avg:.3f}'
+                    f'Acc person {person_acces.avg:.3f}'
+                    f'Acc style {style_acces.avg:.3f}'
+                    f'Acc topic {topic_acces.avg:.3f}'
+                    f' Loss {losses.avg:.5f}')
 
         for dim in dims:
-
             plot_heatmap(stats={'y_test': predict_info[dim]['target_list'], 'y_pred': predict_info[dim]['pred_tag_list']},
                          save_path=os.path.join(args.save_path, args.experiment_pref,
                                                 f'{dim}_{data_type}_heatmap_{epoch}_{eval(f"{dim}_acces").avg}.png'),
                          idx2class=label_dict[dim][len(label_dict[dim])-1]['id2cls'])
 
 
-            plot_report(stats={'y_test': predict_info[dim]['target_list'], 'y_pred': predict_info[dim]['pred_tag_list']},
+            plot_report(stats={'y_test': predict_info[dim]["target_list"], 'y_pred': predict_info[dim]['pred_tag_list']},
                         save_path=os.path.join(args.save_path, args.experiment_pref,
-                                                f'{dim}_{data_type}_report_{epoch}_{eval(f"{dim}_acces").avg}.json'),
+                                               f'{dim}_{data_type}_report_{epoch}_{eval(f"{dim}_acces").avg}.json'),
                         idx2class=label_dict[dim][len(label_dict[dim])-1]['id2cls'])
             write_val_result(
-                stats={'vid': vid_list, 'y_test': predict_info[dim]['target_list'],
+                stats={'vid': vid_list, 'y_test': predict_info[dim]["target_list"],
                        'y_pred': predict_info[dim]['pred_tag_list'],
                        'y_value': predict_info[dim]['pred_prob_list']},
                 save_path=os.path.join(args.save_path, args.experiment_pref,
-                                                f'{dim}_{data_type}_case_result_{epoch}_{eval(f"{dim}_acces").avg}.csv'),
+                                       f'{dim}_{data_type}_case_result_{epoch}_{eval(f"{dim}_acces").avg}.csv'),
                 idx2class=label_dict[dim][len(label_dict[dim])-1]['id2cls'])
+
     return losses.avg, expression_acces.avg, material_acces.avg, person_acces.avg, style_acces.avg, topic_acces.avg
 
 
