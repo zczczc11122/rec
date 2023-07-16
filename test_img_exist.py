@@ -2,7 +2,7 @@ import os
 import pandas as pd
 import shutil
 from PIL import Image
-from  concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor
 
 
 def remove_img(param):

@@ -11,7 +11,7 @@ def set_fixed_seed(seed, args, checkpoint):
     torch.cuda.manual_seed_all(seed)
 
     torch.backends.cudnn.deterministic = True
-    # 想随机种子的结果完全一致 torch.backends.cudnn.deterministic 要设置成 False，不过训练速度会下降
+    # 想随机种子的结果完全一致 torch.backends.cudnn.benchmark 要设置成 False，不过训练速度会下降
     torch.backends.cudnn.benchmark = False
     os.environ["PYTHONHASHSEED"] = str(seed)
 

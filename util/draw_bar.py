@@ -16,7 +16,7 @@ def convert_float_str(x):
         return str(x)
 def draw_discrete_bar(sta_dict, title, layout):
     row, col, index = layout
-    plt.subplots(row, col, index)
+    plt.subplot(row, col, index)
     # discrete_label = discrete_cls_list[title]
     # another_label = []
     # for i in sta_dict:
@@ -49,7 +49,7 @@ def draw_discrete(discrete, save_file, dst_columns, row, col, fillna_v='空', v2
 
 path = '/opt/tiger/mlx_notebook/cc/classification/video/data/data_v2/info.parquet'
 df = pd.read_parquet(path, engine='pyarrow')
-draw_discrete(df, "label_distribute_v2.jpg", ['label_person', 'label_scene', 'lable_style', 'label_expression', 'label_material'], 5, 1, fillna_v='空', v2=True)
+draw_discrete(df, "label_distribute_v2.jpg", ['label_person', 'label_scene', 'label_style', 'label_expression', 'label_material'], 5, 1, fillna_v='空', v2=True)
 
 
 # for index, row in df.iterrows():

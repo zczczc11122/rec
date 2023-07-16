@@ -17,7 +17,7 @@ import torch.optim
 import matplotlib.pyplot as plt
 from v1.dataset_v1 import ListFileDataSet
 from v1.dataset_bnn_v1 import ListFileDataSetBBN
-# from models_Timsf import MutilModel
+# from models_Timsf import MultiModel
 from v1.models_cnn_v1 import VideoCNNModel
 from audio import vggish
 from transforms import *
@@ -35,8 +35,8 @@ from util.dist_sampler import WeightedRandomSamplerDDP
 #遗留问题：分布式目前不支持带权重采样的sample方式，需要重写方法
 # 关注分布式的workers数量
 # convert_sync_batchnorm加载参数问题
-#注val 的 sample 的drop_last和 dataloader的drop_last 会不会冲突
-#看日志中的batch_size、epoch数，   dataloader长度和num_steps_per_epoch一不一样
+#注val 的 samlpe 的drop_last和 dataloader的drop_last 会不会冲突
+#看日志中的batch_size、epoch数,   dataloader长度和num_steps_per_epoch一不一样
 #看学习率变化是否符合预期
 #find_unused_parameters=True 什么用
 #logger存在重复打印问题
@@ -132,7 +132,7 @@ def _init_model():
             best_acc = checkpoint['best_acc']
             new_state_dict = copyStateDict(checkpoint['state_dict'])
             model.load_state_dict(new_state_dict, strict=True)
-            logger.info("=> loading checkpoint '{}' (epoch {})".format(args.resume, checkpoint['epoch']))
+            logger.info("=> loaded checkpoint '{}' (epoch {})".format(args.resume, checkpoint['epoch']))
         else:
             logger.info("=> no checkpoint found at '{}'".format(args.resume))
 
@@ -240,8 +240,8 @@ def main_worker(local_rank):
         train=False,
         image_tmpl='{:03d}.jpg',
         transform=torchvision.transforms.Compose([
-                                        GroupMultiScaleCrop(input_size, [1, .875, .75, .66]),
-                                        GroupRandomHorizontalFlip(is_flow=False),
+                                        GroupScale(int(scale_size)),
+                                        GroupCenterCrop(crop_size),
                                         common_trans
                                   ]),
         bert_path=args.bert_path,
@@ -257,9 +257,9 @@ def main_worker(local_rank):
         train=False,
         image_tmpl='{:03d}.jpg',
         transform=torchvision.transforms.Compose([
-                                            GroupMultiScaleCrop(input_size, [1, .875, .75, .66]),
-                                            GroupRandomHorizontalFlip(is_flow=False),
-                                            common_trans
+                                        GroupScale(int(scale_size)),
+                                        GroupCenterCrop(crop_size),
+                                        common_trans
                                   ]),
         bert_path=args.bert_path,
         local_rank=local_rank
@@ -293,7 +293,7 @@ def main_worker(local_rank):
         #DistributedSampler 中的drop_last指的是基于总数据量能不能整除进程数，选择是否扔掉多出来的部分
         #DataLoader中的drop_last指的是基于sampler中的数据量能不能整除batch数（这部分未证实，暂时这么认为），选择是否扔掉多出来的部分
         #所以DistributedSampler 中的drop_last 和DataLoader中的drop_last互不影响，自己设置自己的（这部分未证实，暂时这么认为）
-        #DataLoader中的num_workers，在分布式中会变成num_workers*进程数（已证实）
+        #DataLoader 中的num_workers，在分布式中会变成num_workers*进程数（已证实）
         val_sampler = torch.utils.data.distributed.DistributedSampler(val_dataset, shuffle=False, drop_last=False)
         test_sampler = torch.utils.data.distributed.DistributedSampler(test_dataset, shuffle=False, drop_last=False)
         train_data_loader_batch_size = args.batch_size
@@ -336,7 +336,7 @@ def main_worker(local_rank):
         raise ValueError('args.cls_loss_type is illegal')
     criterion_kl = KLLoss()
 
-    if args.dist_type == 'ddp':
+    if args.dist_type == "ddp":
         criterion_ce = criterion_ce.cuda(local_rank)
         criterion_kl = criterion_kl.cuda(local_rank)
     else:
@@ -358,19 +358,19 @@ def main_worker(local_rank):
     backbone_params_id = list(map(id, backbone_params))
     normal_params = list(filter(lambda p: id(p) not in backbone_params_id, list(model.module.parameters())))
 
-    if args.optim_typ == 'sgd':
+    if args.optim_type == 'sgd':
         backbone_optimizer = torch.optim.SGD(params=backbone_params,
                                              lr=args.lr,
                                              momentum=0.9)
         normal_optimizer = torch.optim.SGD(params=normal_params,
                                            lr=args.lr,
                                            momentum=0.9)
-    elif args.optim_typ == 'adam':
+    elif args.optim_type == 'adam':
         backbone_optimizer = torch.optim.Adam(params=backbone_params,
                                               lr=args.lr)
         normal_optimizer = torch.optim.Adam(params=normal_params,
                                             lr=args.lr)
-    elif args.optim_typ == 'adamw':
+    elif args.optim_type == 'adamw':
         backbone_optimizer = torch.optim.AdamW(params=backbone_params,
                                                lr=args.lr,
                                                weight_decay=args.weight_decay)
@@ -378,7 +378,7 @@ def main_worker(local_rank):
                                              lr=args.lr,
                                              weight_decay=args.weight_decay)
     else:
-        raise ValueError("args.optim_typ is illegal")
+        raise ValueError("args.optim_type is illegal")
     # arcface中优化器的写法
     # optimizer = torch.optim.SGD([{'params': model.parameters()}, {'params': metric_fc.parameters()}],
     #                             lr=lr, weight_decay=weight_decay)
@@ -417,7 +417,7 @@ def main_worker(local_rank):
                                                                decay_rate=args.lr_decay_rate,
                                                                num_warmup_epochs=0.0,
                                                                epoch_start=args.start_epoch,
-                                                               after_scheduler=backbone_after_scheduler)
+                                                               after_scheduler=normal_after_scheduler)
     elif args.warmup_type == "WarmupAndExponentialDecay":
         backbone_scheduler = WarmupAndExponentialDecayScheduler(optimizer=backbone_optimizer,
                                                                 num_steps_per_epoch=num_steps_per_epoch,
@@ -487,10 +487,10 @@ def main_worker(local_rank):
             best_acc = max(val_acc, best_acc)
             if is_best:
                 best_epoch = epoch
-            _save_checkpoint({'epoch':epoch + 1, 'arch': args.arch,
+            _save_checkpoint({'epoch': epoch + 1, 'arch': args.arch,
                               'state_dict': model.state_dict(), 'best_acc': best_acc,
                               'backbone_optimizer': backbone_optimizer.state_dict(),
-                              'normal_optimizer': normal_scheduler.state_dict(),
+                              'normal_optimizer': normal_optimizer.state_dict(),
                               'backbone_scheduler': backbone_scheduler.state_dict(),
                               'normal_scheduler': normal_scheduler.state_dict(),
                               'cuda_rng_state': torch.cuda.get_rng_state(),
@@ -539,9 +539,9 @@ def train(train_loader, model, criterions, optimizers, schedulers, epoch, local_
                 sample_label = sample_label.cuda()
 
         if args.use_bbn:
-            # bbn需要model forward 2次
+            # bnn需要model forward 2次
             # 网上有人解释：在分布式训练中，如果对同一模型进行多次调用则会触发报错（使用nn.DataParallel并行训练或者单卡训练均可正常运行），
-            # 即nn.parallel.DistributedDataParallel方法封装的模型，forward()函数和backward()函数必须交替执行，
+            # 即nn.parallel.DistributedDataParallel方法封装的模型，forword()函数和backward()函数必须交替执行，
             # 如果执行多个（次）forward()然后执行一次backward()则会报错。解决方案：设置DistributedDataParallel 的 broadcast_buffers=False
             if args.bbn_loss_method == 'weight_logist':
                 # 这里实现和官方的BBN实现略有差异,官方的BBN相当于使用不同的分类器进行相加，且模型最后一个block两个分支也不一样
@@ -552,7 +552,7 @@ def train(train_loader, model, criterions, optimizers, schedulers, epoch, local_
                 sample_predict_logists = sample_outputs['predict']['video']
 
                 l = 1 - ((epoch) / args.bbn_div_epoch) ** 2
-                bbn_predict_logists = l * predict_logists + (1 -l) * sample_predict_logists
+                bbn_predict_logists = l * predict_logists + (1 - l) * sample_predict_logists
                 loss = l * criterion_ce(bbn_predict_logists, label) + (1 - l) * criterion_ce(bbn_predict_logists, sample_label)
             elif args.bbn_loss_method == 'weight_loss':
                 # 这里实现和官方的BBN实现差距较大
@@ -625,7 +625,7 @@ def train(train_loader, model, criterions, optimizers, schedulers, epoch, local_
         end = time.time()
 
         if step % args.print_freq == 0:
-            logger.info('Epoch: [{epoch}/{step}/{len}]\t'
+            logger.info('Epoch: [{epoch}][{step}/{len}]\t'
                         'batch: {batch_size} local_rank/nprocs: {local_rank}/{nprocs}\t'
                         'b_lr: {b_lr:.8f} n_lr: {n_lr:.8f}\t'
                         'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
@@ -665,9 +665,9 @@ def validate(val_loader, model, criterions, epoch, data_type, idx2class, local_r
             else:
                 feature = [f.cuda() for f in features]
                 label = label.cuda()
-            output = model(*feature)
+            outputs = model(*feature)
 
-            predict_logists = output['predict']['video']
+            predict_logists = outputs['predict']['video']
             pred_softmax = torch.softmax(predict_logists, dim=1)
             pred_probs, pred_tags = torch.max(pred_softmax, dim=1)
 
@@ -727,10 +727,10 @@ def validate(val_loader, model, criterions, epoch, data_type, idx2class, local_r
                                                                    acces=acces))
     if args.dist_type != "ddp" or local_rank == 0:
         logger.info(f'{data_type} Results: Acc {acces.avg:.3f} Loss {losses.avg:.5f}')
-        plot_heatmap(stats={'y_test': target_list, 'y_pred':pred_tag_list},
+        plot_heatmap(stats={'y_test': target_list, 'y_pred': pred_tag_list},
                      save_path=os.path.join(args.save_path, args.experiment_pref, f'{data_type}_heatmap_{epoch}_{acces.avg}.png'),
                      idx2class=idx2class)
-        plot_report(stats={'y_test': target_list, 'y_pred':pred_tag_list},
+        plot_report(stats={'y_test': target_list, 'y_pred': pred_tag_list},
                     save_path=os.path.join(args.save_path, args.experiment_pref, f'{data_type}_report_{epoch}_{acces.avg}.json'),
                     idx2class=idx2class)
         write_val_result(
@@ -791,9 +791,9 @@ def test_speed():
     for i in range(run_num):
         output2 = model_2(*features)
     end = time.time()
-    logger.info(f'total: {end - start} run time:{run_num}')
-    logger.info('ave', (end - start) / run_num)
-    logger.info('fps:', run_num / (end - start))
+    logger.info(f'total: {end - start} run_num:{run_num}')
+    logger.info(f'ave: {(end - start) / run_num}')
+    logger.info(f'fps: {run_num / (end - start)}')
 
 
 def _export_ts_models():
@@ -821,7 +821,7 @@ runtime_conf {
     allowed_batch_sizes: [1, 2, 10]
 }'''
     export_args = copy.deepcopy(args)
-    export_args.num_segments = 8  # by default, don't modify!!
+    # export_args.num_segments = 8  # by default, don't modify!!
 
     export_model = VideoCNNModel(export_args, deploy=True)
     checkpoint = torch.load(os.path.join(args.save_path, args.experiment_pref, 'last_checkpoint.pth.tar'), map_location=torch.device('cpu'))
@@ -881,14 +881,14 @@ runtime_conf {
     # with open(os.path.join(target_pt_path, 'model_conf.prototxt'), 'w') as pro_f:
     #     pro_f.write(prototxt)
     # logger.info('export ts model success.')
-    #
+
     # laplace_deploy_file = {
     #     "framework": "pytorch",
     #     "model": "model.pt",
     #     "inputs": [
     #         {"name": "video_inputs", "batch_axis": 1},
     #         {"name": "title_inputs", "batch_axis": 1},
-    #         {"name": "ocr_inputs", "batch_axis": 1}
+    #         {"name": "ocr_inputs", "batch_axis": 1},
     #     ],
     #     "outputs": [
     #         {"name": "predict", "batch_axis": 1},

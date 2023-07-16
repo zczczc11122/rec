@@ -16,9 +16,9 @@ parser.add_argument('--prefix-path', type=str, help='train val test prefix path'
 # parser.add_argument('--num-class', type=int, default=2)
 
 # ========================= distributed Configs =========================
-parser.add_argument('--local-rank', default=-1, type=int, help='node rank for distributed training')
+parser.add_argument('--local_rank', default=-1, type=int, help='node rank for distributed training')
 parser.add_argument('--dist-type', default="ddp", type=str, choices=['ddp', 'dp'])
-parser.add_argument('--is_syn_bn', type=bool, default=False)
+parser.add_argument('--is-syn-bn', type=bool, default=False)
 
 
 
@@ -32,7 +32,7 @@ parser.add_argument('--idx2class_file_person', type=str, help='person label path
 parser.add_argument('--idx2class_file_style', type=str, help='style label path',
                     default='./vocabulary/video_classification_class_id_style.txt')
 parser.add_argument('--idx2class_file_topic', type=str, help='topic label path',
-                    default='./vocabulary/video_classification_class_id_topic.txt')
+                    default='./vocabulary/video_classification_class_id_topical.txt')
 
 # ========================= Model Configs =========================
 parser.add_argument('--arch', type=str, default="resnet18",
@@ -49,7 +49,7 @@ parser.add_argument('--vlad-add-final-fc', type=bool, default=True)
 parser.add_argument('--vlad-hidden-size', type=int, default=1024)
 parser.add_argument('--vlad-add-se', type=bool, default=True)
 parser.add_argument('--bert-fintuing', type=bool, default=False)
-parser.add_argument('--consensus_type', type=str, default='tsm_trn_base-tsn',
+parser.add_argument('--consensus_type', type=str, default='tsm_trn_base_tsn',
                     choices=['avg', 'netvlad', 'nextvlad', 'timesformer', 'tsmnetvlad', 'tsm_trn_base_tsn', 'trn', 'trn_base_tsn', 'videoswin'])
 parser.add_argument('--resample', default=False, type=bool, help='class balanced resample')
 
@@ -58,10 +58,10 @@ parser.add_argument('--num-segments', type=int, default=10)
 parser.add_argument('--num-segments-val', type=int, default=10)
 parser.add_argument('--vlad-cluster-size', type=int, default=64)
 parser.add_argument('--timsf-pretrian', type=str, default='/mnt/bn/zc-model-nas-lq/model_pretrain_weight/TimeSformer_divST_8x32_224_K600.pyth')
-parser.add_argument('--video-swin-pretrian', type=str, default='/mnt/bn/zc-model-nas-lq/model_pretrain_weight/swin_base_patch224_windows877_kinetics600_22k.pth')
+parser.add_argument('--video-swin-pretrian', type=str, default='/mnt/bn/zc-model-nas-lq/model_pretrain_weight/swin_base_patch244_window877_kinetics600_22k.pth')
 
 # parser.add_argument('--timsf-hidden-size', type=int, default=768)
-# parser.add_argument('cover-arch', type=str, default="resnet50")
+# parser.add_argument('--cover-arch', type=str, default="resnet50")
 
 # ========================= Text Configs =========================
 # parser.add_argument('--word-idx-file', type=str,
@@ -80,7 +80,7 @@ parser.add_argument('--video-swin-pretrian', type=str, default='/mnt/bn/zc-model
 parser.add_argument('--bert-path', type=str, default='/mnt/bn/zc-model-nas-lq/model_pretrain_weight/chinese-bert-wwm-ext', help='you can use yourself bert_file_path like /home/work/bert-**-model')
 
 # ========================= Audio Configs =========================
-# parser.add_argument('--only-use-audio', type=bool, default=False)
+# parser.add_argument('--olny-use-audio', type=bool, default=False)
 # parser.add_argument('--num-sec', type=int, default=10)
 parser.add_argument('--audio-pretrian', type=str, default='/mnt/bn/zc-model-nas-lq/model_pretrain_weight/11200_iterations.pth')
 # parser.add_argument('--audio-hdf5path', type=str, default='/opt/tiger/mlx_notebook/audio/')
@@ -107,7 +107,7 @@ parser.add_argument('--batch-size', default=64, type=int, help='mini-batch size'
 # parser.add_argument('--batch-size', default=16, type=int, help='mini-batch size')
 parser.add_argument('--batch-size-val', default=64, type=int, help='mini-batch size')
 parser.add_argument('--dropout', '--do', default=0.3, type=float,
-                    metavar='D0', help='dropout ratio (default: 0.5)')
+                    metavar='DO', help='dropout ratio (default: 0.5)')
 parser.add_argument('--lr', '--learning-rate', default=0.0003, type=float, metavar='LR', help='initial learning rate')
 parser.add_argument('--weight-decay', default=0.0001, type=float, help='weight decay')
 parser.add_argument('--divide-every-n-epochs', default=1, type=int, help='learning rate decay every n epochs')
@@ -119,7 +119,7 @@ parser.add_argument('--optim-type', default='adamw', choices=['adamw', 'adam', '
                     type=str, help='warmup type')
 
 # ========================= Loss Configs =========================
-parser.add_argument('--cls-loss-type', default='smoothing loss', choices=['focal_loss', 'smoothing_loss'],
+parser.add_argument('--cls-loss-type', default='smoothing_loss', choices=['focal_loss', 'smoothing_loss'],
                     type=str, help='classifier loss type')
 parser.add_argument('--use-bbn', default=False, type=bool, help='is use bbn')
 parser.add_argument('--bbn-loss-method', default='weight_logist', choices=['weight_loss', 'weight_logist'],

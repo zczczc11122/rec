@@ -96,7 +96,7 @@ class FocalLoss(nn.Module):
         class_mask.scatter_(1, ids.data, 1.)
 
         if inputs.is_cuda and not self.alpha.is_cuda:
-            self.alpha = self.alpha.cuda()
+            self.alpha = self.alpha.to(device)
         alpha = self.alpha[ids.data.view(-1)]
 
         probs = (P*class_mask).sum(1).view(-1,1)
@@ -115,7 +115,7 @@ class ClipLoss(nn.Module):
             self,
             local_loss=False,
             gather_with_grad=False,
-            cache_labels=False,
+            cache_labels=True,
             rank=0,
             world_size=1,
             only_label=False

@@ -17,9 +17,9 @@ class TSM(nn.Module):
         self.shift_place = shift_place
         self.temporal_pool = temporal_pool
 
-        input_size = 224
-        input_mean = [0.485, 0.456, 0.406]
-        input_std = [0.229, 0.224, 0.225]
+        self.input_size = 224
+        self.input_mean = [0.45, 0.45, 0.45]
+        self.input_std = [0.225, 0.225, 0.225]
 
         self._prepare_base_model(base_model)
 

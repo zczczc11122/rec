@@ -15,7 +15,7 @@ class Backbone(object):
             input_size = 224
             input_mean = [0.485, 0.456, 0.406]
             input_std = [0.229, 0.224, 0.225]
-        elif arch in ['Inception3', 'Inception_v3']:
+        elif arch in ['Inception3', 'inception_v3']:
             base_model = getattr(torchvision.models, arch)(True)
             feature_dim = base_model.fc.in_features
             base_model.aux_logits = False
@@ -32,7 +32,7 @@ class Backbone(object):
             # feature_dim = base_model._fc.in_features
             # base_model._fc = nn.Identity()
             base_model = EfficientNet.from_pretrained(arch,
-                                                      weights_path="../efficientnet-b3-5fb5a3c3.pth", include_top=False)
+                                                      weights_path="./efficientnet-b3-5fb5a3c3.pth", include_top=False)
             base_model.set_swish(memory_efficient=False)
             feature_dim = base_model._conv_head.out_channels
             input_size = 224

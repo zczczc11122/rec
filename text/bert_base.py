@@ -59,11 +59,11 @@ class TextBERT_seq(nn.Module):
         if not self.fintuing:
             with torch.no_grad():
                 outputs = self.bert(input_ids, attention_mask, token_type_ids)
-                out_pool = outputs[1]
+                out_pool = outputs[0]
                 return out_pool
         else:
             outputs = self.bert(input_ids, attention_mask, token_type_ids)
-            out_pool = outputs[1]
+            out_pool = outputs[0]
             return out_pool
 
     def get_output_dim(self):

@@ -50,10 +50,10 @@ class VideoCNNModel(nn.Module):
             assert 'resnet' in args.arch.lower(), 'tsm arch目前只支持 resnet'
             self.vision_model = TSMRelationModuleBaseTsn(self.args)
         elif self.args.consensus_type == "timesformer":
-            assert self.num_segments == 8, 'timesformer 对应 num_segments 必须为8'
+            assert self.args.num_segments == 8, 'timesformer 对应 num_segments 必须为8'
             self.vision_model = Timesformer(self.args, deploy)
         elif self.args.consensus_type == "videoswin":
-            #videoSwin 论文中fnum_segments用的32，感觉太多了，我们还是用10
+            #VideoSwin 论文中fnum_segments用的32，感觉太多了，我们还是用10
             #经分析，最好还是8的倍数，可见笔记分析
             assert self.args.num_segments % 8 == 0, 'videoswin 对应 num_segments 为8的倍数'
             self.vision_model = VideoSwin(self.args, deploy)
@@ -62,7 +62,7 @@ class VideoCNNModel(nn.Module):
         else:
             raise ValueError("args.consensus_type is illegal")
 
-        # assert 'resnet' in args.arch.lower(), 'motion的 arch目前只支持 resnet，如果换arch为其他模型，'\
+        # assert 'resnet' in args.arch.lower(), 'motion的 arch目前只支持 resnet，如要换arch为其他模型，'\
         #                                       '需要把motion的arch与vision的arch写成两个，这先共用'
         # assert self.args.consensus_type != "tsmnetvlad", "有了motion模态，vision最好不用tsmnetvlad，不然这俩重复了"
         # self.motion_model = TSMNetVLADSE(self.args)
@@ -222,7 +222,7 @@ class VideoCNNModel(nn.Module):
             else:
                 fcn_output = self.intermediate_fc([video_embedding, title_embedding, ocr_embedding, audio_embedding])
 
-        fcn_output = self.gating_fc(fcn_output)
+        fcn_output = self.se_gating(fcn_output)
 
         if self.moe:
             # shape (n_batch, n_classes, num_mixtures)
@@ -301,7 +301,7 @@ class VideoCNNModel(nn.Module):
                        self.args.consensus_type,
                        self.args.dropout,
                        self.vision_model.feature_dim,
-                       self.args.num_class))
+                       self.n_classes))
 
 
 if __name__ == '__main__':

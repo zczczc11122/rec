@@ -6,7 +6,7 @@ from torch.nn.init import xavier_normal_
 
 class LMF(nn.Module):
     '''
-    Low-rank MutilModal Fusion
+    Low-rank MultiModal Fusion
     '''
 
     def __init__(self, hidden_dims, output_dim, rank=4):

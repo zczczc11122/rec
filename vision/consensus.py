@@ -22,14 +22,14 @@ class NetVLADConsensus(torch.nn.Module):
         self.activation_weights = torch.nn.Linear(in_features=feature_size, out_features=num_clusters)
         self.bn = torch.nn.BatchNorm1d(num_features=num_clusters)
         self.cluster = torch.nn.Parameter(torch.randn(1, feature_size, num_clusters))
-        if add_final_fc:
+        if self.add_final_fc:
             self.linear = torch.nn.Sequential(torch.nn.Dropout(0.2),
-                                              torch.nn.Linear(in_features=feature_size * num_clusters,
+                                              torch.nn.Linear(in_features=self.feature_size * self.num_clusters,
                                                               out_features=output_feature_size))
             self.vlad_hidden_size = output_feature_size
         else:
 
-            self.vlad_hidden_size = feature_size * self.num_clusters
+            self.vlad_hidden_size = self.feature_size * self.num_clusters
 
     def forward(self, x):
         num_segments = x.size()[1]
@@ -38,16 +38,16 @@ class NetVLADConsensus(torch.nn.Module):
         # batch_size * num_segments, feature_size
 
         activation = self.activation_weights(x)
-        # batch_size * num_segments, feature_size
+        # batch_size * num_segments, num_clusters
         if self.add_batch_norm:
             activation = self.bn(activation)
         activation = torch.nn.Softmax(dim=1)(activation).view(-1, num_segments, self.num_clusters)
-        # batch_size * num_segments, feature_size --- view ---> batch_size, num_segments, num_clusters
+        # batch_size * num_segments, num_clusters --- view ---> batch_size, num_segments, num_clusters
 
-        activation_segment_sum = torch.sum(activation, -2, keepdim=True)
+        activation_segments_sum = torch.sum(activation, -2, keepdim=True)
         # batch_size, 1, num_clusters
 
-        cluster_weighted = torch.mul(activation_segment_sum, self.cluster)
+        cluster_weighted = torch.mul(activation_segments_sum, self.cluster)
         # batch_size, feature_size, num_clusters
 
         activation = activation.permute(0, 2, 1)
@@ -102,7 +102,7 @@ class TimeFirstBatchNorm1d(nn.Module):
         else:
             return tensor.view(-1, length, dim)
 
-class NeXtVLADConsensus(torch.nn.Module):
+class NetXtVLADConsensus(torch.nn.Module):
     def __init__(self,
                  feature_size,
                  num_segments,
@@ -296,7 +296,7 @@ class RelationModuleMultiScale(torch.nn.Module):
 
 class RelationModuleBaseTsn(torch.nn.Module):
     """
-     Temporal Relation module in multiply scale, suming over [2-frame relation, 3-frame relation, ..., n-frame relation]
+     Temporal Relation module in multiply scale, suming over [2-frame relation, 3-frame relation, ..., n-frame] relation
     """
 
     def __init__(self,
@@ -337,23 +337,23 @@ class RelationModuleBaseTsn(torch.nn.Module):
         assert num_segments == self.num_segments
         # segments_ratio = num_segments // self.num_segments
         #
-        # relation_scale1 = [i * segments_ratio for i in self.relations_scale1]
-        # relation_scale2 = [i * segments_ratio for i in self.relations_scale2]
-        # relation_scale3 = [i * segments_ratio for i in self.relations_scale3]
-        relation_scale1 = self.relations_scale1
-        relation_scale2 = self.relations_scale2
-        relation_scale3 = self.relations_scale3
+        # relations_scale1 = [i * segments_ratio for i in self.relations_scale1]
+        # relations_scale2 = [i * segments_ratio for i in self.relations_scale2]
+        # relations_scale3 = [i * segments_ratio for i in self.relations_scale3]
+        relations_scale1 = self.relations_scale1
+        relations_scale2 = self.relations_scale2
+        relations_scale3 = self.relations_scale3
 
         # the first one is the largest scale
-        relation_1 = x[:, relation_scale1, :]
+        relation_1 = x[:, relations_scale1, :]
         relation_1 = relation_1.view(batch_size, self.scales[0] * self.feature_dim)
         relation_1 = self.fc_fusion_scale1(relation_1)
 
-        relation_2 = x[:, relation_scale2, :]
+        relation_2 = x[:, relations_scale2, :]
         relation_2 = relation_2.view(batch_size, self.scales[1] * self.feature_dim)
         relation_2 = self.fc_fusion_scale2(relation_2)
 
-        relation_3 = x[:, relation_scale3, :]
+        relation_3 = x[:, relations_scale3, :]
         relation_3 = relation_3.view(batch_size, self.scales[2] * self.feature_dim)
         relation_3 = self.fc_fusion_scale3(relation_3)
 
@@ -361,7 +361,7 @@ class RelationModuleBaseTsn(torch.nn.Module):
         return relation_all
 
     @staticmethod
-    def return_relationset(num_frames, num_frames_relation):
+    def return_relation_set(num_frames, num_frames_relation):
         import itertools
         return list(itertools.combinations([i for i in range(num_frames)], num_frames_relation))
 
@@ -391,7 +391,7 @@ class AverageConsensus(torch.nn.Module):
         return self.hidden_size
 
 if __name__ == '__main__':
-    model = NeXtVLADConsensus(1024, 5, 64, 1024)
+    model = NetXtVLADConsensus(1024, 5, 64, 1024)
     input = torch.rand(10, 5, 4680)
     out = model(input)
     print(out.shape)

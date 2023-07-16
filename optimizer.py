@@ -31,13 +31,13 @@ class WarmupAndExponentialDecayScheduler(_LRScheduler):
         epoch = self._epoch()
         lr = 0.0
         if self._is_warmup_epoch():
-            # 预热阶段将学习率从 0.0 线性增加到 self._max_lr
+            # 预热阶段将学习速率从 0.0 线性增加到 self._max_lr
             num_warmup_steps = self._num_warmup_epochs * self._num_steps_per_epoch
             lr = min(
                 self._max_lr,
                 self._max_lr * ((self._step_count + 1.0) / num_warmup_steps))
         else:
-            # 之后使用指数式衰减， 每训练 self._divide_every_n_epochs 轮，便将学习速率除以self._divisor
+            # 之后使用指数式衰减，每训练 self._divide_every_n_epochs 轮，便将学习速率除以 self._divisor
             lr = self._max_lr * (self._decay_rate ** (epoch // self._divide_every_n_epochs))
 
         return [lr for _ in self.base_lrs]
@@ -60,7 +60,7 @@ class WarmupAndOrderedScheduler(_LRScheduler):
                  decay_rate=0.9,
                  num_warmup_epochs=0.0,
                  min_delta_to_update_lr=1e-6,
-                 epoch_start=0
+                 epoch_start=0,
                 ):
         self._num_steps_per_epoch = num_steps_per_epoch
         self._divide_every_n_epochs = divide_every_n_epochs
@@ -73,7 +73,7 @@ class WarmupAndOrderedScheduler(_LRScheduler):
         self._step_count = self._num_steps_per_epoch * epoch_start
         #self.decay_epoch_list = decay_epoch_list
         #print('init step is {}'.format(str(self._step_count)))
-        #print('init epoch is{}'.format(str(self._epoch())))
+        #print('init epoch is {}'.format(str(self._epoch())))
 
     def _epoch(self):
         return self._step_count // self._num_steps_per_epoch
@@ -87,7 +87,7 @@ class WarmupAndOrderedScheduler(_LRScheduler):
         decay_epoch_list = [3,6,10]
 #        decay_epoch_list = [5,8,12]
         if self._is_warmup_epoch():
-            # 预热阶段将学习率从 0.0 线性增加到 self._max_lr
+            # 预热阶段将学习速率从 0.0 线性增加到 self._max_lr
             num_warmup_steps = self._num_warmup_epochs * self._num_steps_per_epoch
             lr = min(
                 self._max_lr,
@@ -136,7 +136,7 @@ class WarmupAndReduceLROnPlateauScheduler(_LRScheduler):
 
     def get_lr(self):
         if self._is_warmup_epoch():
-            # 预热阶段将学习率从 0.0 线性增加到 self._max_lr
+            # 预热阶段将学习速率从 0.0 线性增加到 self._max_lr
             num_warmup_steps = self._num_warmup_epochs * self._num_steps_per_epoch
             lr = min(
                 self._max_lr,
@@ -150,7 +150,7 @@ class WarmupAndReduceLROnPlateauScheduler(_LRScheduler):
             self.after_scheduler.step(metrics)
             current_lr = self.get_lr()[0]
             # 这里参考的是torch.optim.lr_scheduler.ReduceLROnPlateau的eps参数，
-            # 是大于，不是大于等于，这里self.min_delta_to_update_lr最好和eps参数保持一致
+            # 是大于，不是大于等于，这里self._min_delta_to_update_lr最好和eps参数保持一致
             if abs(current_lr - self._previous_lr) > self._min_delta_to_update_lr:
                 self._previous_lr = current_lr
 
@@ -158,7 +158,7 @@ class WarmupAndReduceLROnPlateauScheduler(_LRScheduler):
             current_lr = self.get_lr()[0]
 
             # 除预热阶段外，之后的每轮训练中，每一步的学习速率相同
-            if abs(current_lr - self._previous_lr) >= self._min_delta_to_update_lr:
+            if abs(current_lr - self._previous_lr) > self._min_delta_to_update_lr:
                 super(WarmupAndReduceLROnPlateauScheduler, self).step()
                 self._previous_lr = current_lr
             else:

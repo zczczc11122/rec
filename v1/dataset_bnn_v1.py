@@ -42,13 +42,13 @@ class VideoRecord(object):
 
     @property
     def num_frames(self):
-        return self._num_frames
+        return int(self._num_frames)
 
     @property
     def label(self):
         return self._label
 
-def float32_to_int64(x):
+def float32_to_int16(x):
     assert np.max(np.abs(x)) <= 1.2
     x = np.clip(x, -1, 1)
     return (x * 32767.).astype(np.int16)
@@ -108,7 +108,7 @@ class ListFileDataSetBBN(data.Dataset):
 
         self.weights = self._get_sample_balanced_weights()
 
-        self.class_weight, self.sum_weight = self._get_weights()
+        self.class_weight, self.sum_weight = self._get_weight()
         self.class_dict = self._get_class_dict()
 
     def __len__(self):
@@ -120,7 +120,7 @@ class ListFileDataSetBBN(data.Dataset):
 
         sample_class = self.sample_class_index_by_weight()
         sample_indexes = self.class_dict[sample_class]
-        sample_index = random.choices(sample_indexes)
+        sample_index = random.choice(sample_indexes)
 
         sample_record = self.video_list[sample_index]
         sample_vid, sample_feature, sample_label = self._get(sample_record)
@@ -199,7 +199,7 @@ class ListFileDataSetBBN(data.Dataset):
             if average_duration > 0:
                 offsets = np.multiply(list(range(num_segments)), average_duration) + randint(average_duration, size=num_segments)
             else:
-                offsets = np.sort(randint(frame_len, size=num_segments - frame_len)).tolist() + list(range(frame_len))
+                offsets = np.sort(randint(frame_len, size=(num_segments - frame_len)).tolist() + list(range(frame_len)))
             offsets = offsets.tolist()
         else:
             tick = frame_len / float(num_segments)
@@ -259,10 +259,10 @@ class ListFileDataSetBBN(data.Dataset):
                                                   max_length=self.bert_max_len,
                                                   padding='max_length',
                                                   truncation=True)
-        title_inputs_ids = torch.LongTensor(title_text_idx['input_ids'])
+        title_input_ids = torch.LongTensor(title_text_idx['input_ids'])
         title_token_type_ids = torch.LongTensor(title_text_idx['token_type_ids'])
         title_attention_mask = torch.LongTensor(title_text_idx['attention_mask'])
-        ocr_inputs_ids = torch.LongTensor(ocr_text_idx['input_ids'])
+        ocr_input_ids = torch.LongTensor(ocr_text_idx['input_ids'])
         ocr_token_type_ids = torch.LongTensor(ocr_text_idx['token_type_ids'])
         ocr_attention_mask = torch.LongTensor(ocr_text_idx['attention_mask'])
 
@@ -272,8 +272,8 @@ class ListFileDataSetBBN(data.Dataset):
         # ocr_text_idx = self._get_text_idx(record, text_type='ocr')
         # return vid, (images, title_text_idx, ocr_text_idx), label
 
-        return vid, (images, audio, title_inputs_ids, title_token_type_ids, title_attention_mask,
-                     ocr_inputs_ids, ocr_token_type_ids, ocr_attention_mask), label
+        return vid, (images, audio, title_input_ids, title_token_type_ids, title_attention_mask,
+                     ocr_input_ids, ocr_token_type_ids, ocr_attention_mask), label
 
     def _get_sample_balanced_weights(self):
         self.label2weight = {}
@@ -290,7 +290,7 @@ class ListFileDataSetBBN(data.Dataset):
             weights.append(self.label2weight[label])
         return weights
 
-    def _get_weights(self):
+    def _get_weight(self):
         num_list = [0 for _ in range(self.num_cls)]
         for record in self.video_list:
             category_id = record.label

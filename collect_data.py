@@ -30,7 +30,7 @@ def download(entry):
             try:
                 path2 = img_path + str(object_id)
                 if not os.path.exists(path2):
-                    cmd = 'mkdir' + path2
+                    cmd = 'mkdir ' + path2
                     path2 += '/'
                     a2 = subprocess.Popen(cmd, shell=True)
                     out, err = a2.communicate()
@@ -48,7 +48,7 @@ def download(entry):
             os.remove(path)
     return wavpath, img_path + str(object_id)
 
-def float32_to_int64(x):
+def float32_to_int16(x):
     """float32 转化 int16 压缩存储空间"""
     assert np.max(np.abs(x)) <= 1.2
     x = np.clip(x, -1, 1)
@@ -67,7 +67,7 @@ def Convert_wav2npy(vid, wav_path):
         return None
     if os.path.isfile(wav_path):
         (audio, _) = librosa.core.load(wav_path, sr=sample_rate, mono=True)
-        audio = float32_to_int64(audio)
+        audio = float32_to_int16(audio)
         np.save(os.path.join(audio_path, vid + '.npy'), audio)
         os.remove(wav_path)
         return os.path.join(audio_path, vid + '.npy')

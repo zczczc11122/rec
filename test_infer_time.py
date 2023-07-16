@@ -31,6 +31,6 @@ start = time.time()
 for i in range(run_num):
     output2 = model_2(*features)
 end = time.time()
-print(f'total: {end - start} run time:{run_num}')
-print('ave', (end - start)/run_num)
+print(f'total: {end - start} run_num:{run_num}')
+print('ave:', (end - start)/run_num)
 print('fps:', run_num / (end - start))

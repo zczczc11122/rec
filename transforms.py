@@ -68,11 +68,11 @@ class GroupNormalize(object):
         self.std = std
 
     def __call__(self, tensor):
-        rep_mean = self.mean * (tensor.size()[0]//len(self.mean))
-        rep_std = self.std * (tensor.size()[0]//len(self.std))
+        repeat_mean = self.mean * (tensor.size()[0]//len(self.mean))
+        repeat_std = self.std * (tensor.size()[0]//len(self.std))
 
         # TODO: make efficient
-        for t, m, s in zip(tensor, rep_mean, rep_std):
+        for t, m, s in zip(tensor, repeat_mean, repeat_std):
             t.sub_(m).div_(s)
 
         return tensor
@@ -88,7 +88,7 @@ class GroupScale(object):
     """
 
     def __init__(self, size, interpolation=Image.BILINEAR):
-        self.worker = torchvision.transforms.Scale(size, interpolation)
+        self.worker = torchvision.transforms.Resize(size, interpolation)
 
     def __call__(self, img_group):
         return [self.worker(img) for img in img_group]
@@ -274,9 +274,9 @@ class Stack(object):
             return np.concatenate([np.expand_dims(x, 2) for x in img_group], axis=2)
         elif img_group[0].mode == 'RGB':
             if self.roll:
-                return np.concatenate([np.array(x)[:, :, ::-1] for x in img_group], axis=2)
+                return np.concatenate([np.array(x)[:, :, ::-1] for x in img_group], axis=2)  # height * weight * (sample_len * sample_count)
             else:
-                return np.concatenate(img_group, axis=2)
+                return np.concatenate(img_group, axis=2)  # height * weight * (num_segment * channel)
 
 
 class ToTorchFormatTensor(object):
@@ -315,10 +315,10 @@ class GaussianBlur(object):
 
     def __call__(self, x):
         sigma = random.uniform(self.sigma[0], self.sigma[1])
-        x = x.filer(ImageFilter.GaussianBlur(radius=sigma))
+        x = x.filter(ImageFilter.GaussianBlur(radius=sigma))
         return x
 
-class GroupRandomResizeCrop(object):
+class GroupRandomResizedCrop(object):
     def __init__(self, size, scale):
         self.size = size
         self.scale = scale

@@ -153,9 +153,9 @@ def write_val_result(stats, save_path, idx2class):
                                                                             stats['y_pred'], stats['y_value']):
             true_label = idx2class[true_label_index]
             pred_label = idx2class[pred_label_index]
-            pre_value = pred_list_value
+            pred_value = pred_list_value
             correct = 1 if true_label == pred_label else 0
-            fh.write('{},{},{},{},{}\n'.format(vid, true_label, pred_label, correct, pre_value))
+            fh.write('{},{},{},{},{}\n'.format(vid, true_label, pred_label, correct, pred_value))
 
 
 def gen_index(inputs_torch, thre):

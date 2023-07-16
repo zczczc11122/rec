@@ -2,7 +2,7 @@ from typing import Any
 import math
 from collections import OrderedDict
 from vision.backbone import Backbone
-from vision.consensus import NetVLADConsensus, NeXtVLADConsensus, RelationModuleMultiScale, RelationModuleBaseTsn, AverageConsensus
+from vision.consensus import NetVLADConsensus, NetXtVLADConsensus, RelationModuleMultiScale, RelationModuleBaseTsn, AverageConsensus
 from vision import SqueezeContextGating
 import torch.nn as nn
 import torch
@@ -25,7 +25,7 @@ class TSN(nn.Module):
     def forward(self, x): # batch_size * (num_segments * channel) * height * weight
         num_segments = x.size()[1] // 3
         # batch_size * num_segments, channel, height, weight
-        frame_emb = self.base_model(x.view(-1, num_segments, 3, x.size()[-2], x.size()[-1]))
+        frame_emb = self.base_model(x.view(-1, 3, x.size()[-2], x.size()[-1]))
         if self.args.arch.startswith('efficientnet'):
             frame_emb = frame_emb.squeeze(-1).squeeze(-1)
         # batch_size * num_segments, feature_size
@@ -112,7 +112,7 @@ class TSNNetVLADSE(nn.Module):
                                         add_final_fc=args.vlad_add_final_fc)
         self.vlad_hidden_size = self.netvlad.get_output_dim()
         if self.args.vlad_add_se:
-            self.se = SqueezeContextGating(self.vision_embedding_size)
+            self.se = SqueezeContextGating(self.vlad_hidden_size)
         self.vision_embedding_size = self.vlad_hidden_size
 
     def forward(self, x):  # batch_size * (num_segments * channel) * height * weight
@@ -143,14 +143,14 @@ class TSNNeXtVLADSE(nn.Module):
         self.input_mean = self.backbone.input_mean
         self.input_std = self.backbone.input_std
 
-        self.netvlad = NeXtVLADConsensus(feature_size=self.feature_dim,
-                                         num_segments=args.num_segments,
-                                         num_clusters=args.vlad_cluster_size,
-                                         output_feature_size=args.vlad_hidden_size,
-                                         add_final_fc=args.vlad_add_final_fc)
+        self.netvlad = NetXtVLADConsensus(feature_size=self.feature_dim,
+                                          num_segments=args.num_segments,
+                                          num_clusters=args.vlad_cluster_size,
+                                          output_feature_size=args.vlad_hidden_size,
+                                          add_final_fc=args.vlad_add_final_fc)
         self.vlad_hidden_size = self.netvlad.get_output_dim()
         if self.args.vlad_add_se:
-            self.se = SqueezeContextGating(self.vision_embedding_size)
+            self.se = SqueezeContextGating(self.vlad_hidden_size)
         self.vision_embedding_size = self.vlad_hidden_size
 
     def forward(self, x):  # batch_size * (num_segments * channel) * height * weight
@@ -244,7 +244,7 @@ class TSMNetVLADSE(nn.Module):
                                         add_final_fc=args.vlad_add_final_fc)
         self.vlad_hidden_size = self.netvlad.get_output_dim()
         if self.args.vlad_add_se:
-            self.se = SqueezeContextGating(self.vision_embedding_size)
+            self.se = SqueezeContextGating(self.vlad_hidden_size)
         self.vision_embedding_size = self.vlad_hidden_size
 
     def forward(self, x):  # batch_size * (num_segments * channel) * height * weight
@@ -302,7 +302,7 @@ class Timesformer(nn.Module):
 
         if not (args.resume or deploy):
             model_checkpoint = torch.load(args.timsf_pretrian, map_location=torch.device('cpu'))
-            self.backbone.load_state_dict(model_checkpoint['model_state'], strict=True)
+            self.backbone.load_state_dict(model_checkpoint['state_dict'], strict=True)
         self.backbone.model.head = nn.Identity()
 
     def forward(self, x):
@@ -371,8 +371,8 @@ class PositionEmbedding(nn.Module):
         pe = torch.zeros(max_len, d_model)    # [max_len, d_model]
         position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)    # [1, max_len]
         div_term = torch.exp(torch.arange(0, d_model, 2).float() * (-math.log(10000.0) / d_model))
-        pe[:, 0, 0::2] = torch.sin(position * div_term)
-        pe[:, 0, 1::2] = torch.cos(position * div_term)
+        pe[:, 0::2] = torch.sin(position * div_term)
+        pe[:, 1::2] = torch.cos(position * div_term)
         pe = pe.unsqueeze(0).transpose(0, 1)
         self.register_buffer('pe', pe)   # not the parameters of the Module
 
@@ -399,7 +399,7 @@ class TSNTransformer(nn.Module):
     def forward(self, x): # batch_size * (num_segments * channel) * height * weight
         num_segments = x.size()[1] // 3
         # batch_size * num_segments, channel, height, weight
-        frame_emb = self.base_model(x.view(-1, num_segments, 3, x.size()[-2], x.size()[-1]))
+        frame_emb = self.base_model(x.view(-1, 3, x.size()[-2], x.size()[-1]))
         if self.args.arch.startswith('efficientnet'):
             frame_emb = frame_emb.squeeze(-1).squeeze(-1)
         # batch_size * num_segments, feature_size

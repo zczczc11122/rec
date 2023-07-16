@@ -14,9 +14,9 @@ import torch.nn as nn
 import torch.utils.model_zoo as model_zoo
 import torch.nn.functional as F
 
-from timesformer.models.features import FeatureListNet, FeatureDictNet, FeatureHookNet
-from timesformer.models.conv2d_same import Conv2dSame
-from timesformer.models.linear import Linear
+from vision.timesformer.models.features import FeatureListNet, FeatureDictNet, FeatureHookNet
+from vision.timesformer.models.conv2d_same import Conv2dSame
+from vision.timesformer.models.linear import Linear
 
 
 _logger = logging.getLogger(__name__)
@@ -97,7 +97,7 @@ def resume_checkpoint(model, checkpoint_path, optimizer=None, loss_scaler=None, 
         raise FileNotFoundError()
 
 
-def load_pretrained(model, cfg=None, num_classes=1000, in_chans=3, filter_fn=None, img_size=224, num_frames=8, num_patches=196, attention_type='divided_space_time', pretrained_model="", strict=True):
+def load_pretrained(model, cfg=None, num_classes=1000, in_chans=3, filter_fn=None, img_size=224, num_frames=8, num_patches=196, attention_type='divided_space_time', pretrained_model="", strict=False):
     if cfg is None:
         cfg = getattr(model, 'default_cfg')
     if cfg is None or 'url' not in cfg or not cfg['url']:
@@ -201,7 +201,7 @@ def load_pretrained(model, cfg=None, num_classes=1000, in_chans=3, filter_fn=Non
         state_dict = new_state_dict
 
     ## Loading the weights
-    model.load_state_dict(state_dict, strict=False)
+    model.load_state_dict(state_dict, strict=strict)
 
 
 def extract_layer(model, layer):

@@ -19,7 +19,7 @@ class TextRCNN(nn.Module):
 
         self.lstm = nn.LSTM(self.word_embedding_dim, hidden_size, num_layers,
                             bidirectional=True, batch_first=True, dropout=0.3)
-        self.maxpool = nn.MaxPool1d(pad_size)
+        self.max_pool = nn.MaxPool1d(pad_size)
         self.linear = nn.Linear(hidden_size * 2 + self.word_embedding_dim, text_embedding_size)
 
     def forward(self, x):
