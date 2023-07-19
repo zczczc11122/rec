@@ -302,7 +302,7 @@ class Timesformer(nn.Module):
 
         if not (args.resume or deploy):
             model_checkpoint = torch.load(args.timsf_pretrian, map_location=torch.device('cpu'))
-            self.backbone.load_state_dict(model_checkpoint['state_dict'], strict=True)
+            self.backbone.load_state_dict(model_checkpoint['model_state'], strict=True)
         self.backbone.model.head = nn.Identity()
 
     def forward(self, x):
@@ -343,7 +343,7 @@ class VideoSwin(nn.Module):
 
         if not (args.resume or deploy):
             model_checkpoint = torch.load(args.video_swin_pretrian, map_location=torch.device('cpu'))
-            self.backbone.load_state_dict(copyStateDict(model_checkpoint['model_state']), strict=True)
+            self.backbone.load_state_dict(copyStateDict(model_checkpoint['state_dict']), strict=True)
 
     def forward(self, x):
         x = self.backbone(x)
