@@ -99,7 +99,7 @@ def random_word(tokens, vocab_range, mask):
 
             # 10% randomly change token to random token
             elif prob < 0.9:
-                tokens[i] = random.choice(list(range(*vocab_range)))
+                tokens[i] = random.choice(list(range(vocab_range)))
 
             # -> rest 10% randomly keep current token
 
@@ -153,9 +153,9 @@ class ListFileDataSet(data.Dataset):
         self.local_rank = local_rank
 
         self.txt_db = Txt_db(self.tokenizer.vocab_size,
-                             self.tokenizer.mask_token_id,
-                             self.tokenizer.cls_token_id,
-                             self.tokenizer.sep_token_id)
+                              self.tokenizer.mask_token_id,
+                              self.tokenizer.cls_token_id,
+                              self.tokenizer.sep_token_id)
 
         # self.pad_size = pad_size
         # with open(word_idx_file, 'rb') as fh:
@@ -179,9 +179,9 @@ class ListFileDataSet(data.Dataset):
         ocr_input_ids, ocr_input_ids_mask, ocr_txt_labels_mask, ocr_token_type_ids_mask, ocr_attention_mask_mask, \
         random_images, itm_target, mrfr_img_mask, label = self._get(record, random_record)
 
-        return vid, images, audio,\
-               title_input_ids, title_input_ids_mask, title_txt_labels_mask, title_token_type_ids_mask, title_attention_mask_mask,\
-               ocr_input_ids, ocr_input_ids_mask, ocr_txt_labels_mask, ocr_token_type_ids_mask, ocr_attention_mask_mask,\
+        return vid, images, audio, \
+               title_input_ids, title_input_ids_mask, title_txt_labels_mask, title_token_type_ids_mask, title_attention_mask_mask, \
+               ocr_input_ids, ocr_input_ids_mask, ocr_txt_labels_mask, ocr_token_type_ids_mask, ocr_attention_mask_mask, \
                random_images, itm_target, mrfr_img_mask, label
 
     def create_mlm_io(self, input_ids):
@@ -416,7 +416,7 @@ def data_collate(inputs):
              'ocr_attention_mask_mask': ocr_attention_mask_mask,
              'random_images': random_images,
              'itm_target': itm_target,
-             'cls_label': cls_label,
+             "cls_label": cls_label,
              'mrfr_img_mask': mrfr_img_mask
-            }
+             }
     return vid, batch

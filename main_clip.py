@@ -304,7 +304,7 @@ def main_worker(local_rank):
     num_steps_per_epoch = len(train_dataset) // (args.batch_size * args.num_gpus)
     logger.info(f"num_steps_per_epoch{num_steps_per_epoch}")
     vision_params = model.module.vision_model.backbone
-    text_params = model.module.text
+    text_params = model.module.text_model
     backbone_params = list(torch.nn.ModuleList([vision_params, text_params]).parameters())
     backbone_params_id = list(map(id, backbone_params))
     normal_params = list(filter(lambda p: id(p) not in backbone_params_id, list(model.module.parameters())))
@@ -418,8 +418,8 @@ def main_worker(local_rank):
                                       local_rank)
 
         # evaluate on validation set
-        val_loss, val_acc = validate(val_loader, model, clip_loss, epoch, "val", label_dict, local_rank)
-        test_loss, test_acc = validate(test_loader, model, clip_loss, epoch, "test", label_dict, local_rank)
+        val_loss, val_acc = validate(val_loader, model, clip_loss, epoch, "val", local_rank)
+        test_loss, test_acc = validate(test_loader, model, clip_loss, epoch, "test", local_rank)
 
         if args.warmup_type == "WarmupAndReduceLROnPlateau":
             backbone_scheduler.step(metrics=val_loss)
@@ -527,7 +527,7 @@ def train(train_loader, model, clip_loss, optimizers, schedulers, epoch, local_r
                                                                        data_time=data_time,
                                                                        losses=losses,
                                                                        acces=acces))
-        #           break
+        #         break
     return losses.avg, acces.avg
 
 

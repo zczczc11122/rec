@@ -65,7 +65,7 @@ class Vilt(nn.Module):
         self.audio_model = PANNs.Transfer_Cnn14()
         audio_model_path = args.audio_pretrian
         if not self.deploy:
-            audio_model_checkpoint = torch.load(audio_model_path, map_location=torch.device('cpu'))  # , map_location='cpu')
+            audio_model_checkpoint = torch.load(audio_model_path, map_location=torch.device('cpu'))#, map_location='cpu')
             self.audio_model.load_state_dict(audio_model_checkpoint['model'], strict=False)
 
         self.audio_fc = torch.nn.Linear(in_features=self.audio_model.audio_embedding_size, out_features=self.seq_dim)
@@ -97,26 +97,26 @@ class Vilt(nn.Module):
             raise ValueError("args.se_gating_type is illegal")
 
         if args.classifier_type == 'hierarchicalClassifier':
-            self.classifier_expression = HierarchicalClassifier(self.fcn_dim, 256,
+            self.classifier_expression = HierarchicalClassifier(self.seq_dim, 256,
                                                                 label_dict['expression'], self.args.dropout)
-            self.classifier_material = HierarchicalClassifier(self.fcn_dim, 256,
+            self.classifier_material = HierarchicalClassifier(self.seq_dim, 256,
                                                                 label_dict['material'], self.args.dropout)
-            self.classifier_person = HierarchicalClassifier(self.fcn_dim, 256,
+            self.classifier_person = HierarchicalClassifier(self.seq_dim, 256,
                                                                 label_dict['person'], self.args.dropout)
-            self.classifier_style = HierarchicalClassifier(self.fcn_dim, 256,
+            self.classifier_style = HierarchicalClassifier(self.seq_dim, 256,
                                                                 label_dict['style'], self.args.dropout)
-            self.classifier_topic = HierarchicalClassifier(self.fcn_dim, 256,
+            self.classifier_topic = HierarchicalClassifier(self.seq_dim, 256,
                                                                 label_dict['topic'], self.args.dropout)
         elif args.classifier_type == 'hierarchicalClassifier_simple':
-            self.classifier_expression = HierarchicalClassifierSimple(self.fcn_dim, 256,
+            self.classifier_expression = HierarchicalClassifierSimple(self.seq_dim, 256,
                                                                    label_dict['expression'], self.args.dropout)
-            self.classifier_material = HierarchicalClassifierSimple(self.fcn_dim, 256,
+            self.classifier_material = HierarchicalClassifierSimple(self.seq_dim, 256,
                                                                  label_dict['material'], self.args.dropout)
-            self.classifier_person = HierarchicalClassifierSimple(self.fcn_dim, 256,
+            self.classifier_person = HierarchicalClassifierSimple(self.seq_dim, 256,
                                                                label_dict['person'], self.args.dropout)
-            self.classifier_style = HierarchicalClassifierSimple(self.fcn_dim, 256,
+            self.classifier_style = HierarchicalClassifierSimple(self.seq_dim, 256,
                                                               label_dict['style'], self.args.dropout)
-            self.classifier_topic = HierarchicalClassifierSimple(self.fcn_dim, 256,
+            self.classifier_topic = HierarchicalClassifierSimple(self.seq_dim, 256,
                                                               label_dict['topic'], self.args.dropout)
         else:
             raise ValueError("args.classifier_type is illegal")

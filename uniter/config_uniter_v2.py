@@ -134,7 +134,7 @@ parser.add_argument('--resume', default='/mnt/bn/zc-model-nas-lq/model_result/ch
                     help='path to latest checkpoint (default: none)')
 parser.add_argument('--evaluate', default=False, type=bool, help='evaluate model on validation set')
 parser.add_argument('--save_path', type=str, default="/mnt/bn/zc-model-nas-lq/model_result/checkpoints_top_v1")
-parser.add_argument('--experiment_pref', type=str, default="uniter_v2_20230209_train_mlm_itm_mrfr_bert_freeze")
+parser.add_argument('--experiment_pref', type=str, default="uniter_v2_20230209_train_cls_mlm_itm_mrfr_bert_freeze")
 parser.add_argument('--start-epoch', default=0, type=int, help='manual epoch number (useful on restarts)')
 
 

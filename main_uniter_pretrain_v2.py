@@ -516,7 +516,6 @@ def train(train_loader, model, criterions, optimizers, schedulers, epoch, local_
         # if args.dist_type == "ddp":
         #     feature = [f.cuda(local_rank) for f in features]
         #     labels = [[level_label.cuda(local_rank) for level_label in dim_label] for dim_label in labels]
-        #
         # else:
         #     feature = [f.cuda() for f in features]
         #     labels = [[level_label.cuda() for level_label in dim_label] for dim_label in labels]
@@ -528,8 +527,8 @@ def train(train_loader, model, criterions, optimizers, schedulers, epoch, local_
                 data['material_label_ids'],
                 data['person_label_ids'],
                 data['style_label_ids'],
-                data['topic_label_ids'],
-                    ]
+                data['topic_label_ids']
+                      ]
 
             loss_list = []
             assert len(predict_logists) == len(labels), 'len(predict_logists) 不等于 len(labels)'
@@ -628,7 +627,7 @@ def train(train_loader, model, criterions, optimizers, schedulers, epoch, local_
                                                                        style_acces=style_acces,
                                                                        topic_acces=topic_acces))
 
-        #          break
+        #         break
     return losses.avg, expression_acces.avg, material_acces.avg, person_acces.avg, style_acces.avg, topic_acces.avg
 
 
@@ -683,7 +682,7 @@ def validate(val_loader, model, criterions, epoch, data_type, label_dict, local_
                     data['material_label_ids'],
                     data['person_label_ids'],
                     data['style_label_ids'],
-                    data['topic_label_ids'],
+                    data['topic_label_ids']
                 ]
 
                 vid_list.extend(list(vid))
@@ -730,6 +729,7 @@ def validate(val_loader, model, criterions, epoch, data_type, label_dict, local_
                 for level_loss_list in loss_list:
                     for level_loss in level_loss_list:
                         loss += level_loss
+
 
             else:
                 loss = model(data, task)
@@ -797,7 +797,7 @@ def validate(val_loader, model, criterions, epoch, data_type, label_dict, local_
                     f'Acc style {style_acces.avg:.3f}'
                     f'Acc topic {topic_acces.avg:.3f}'
                     f' Loss {losses.avg:.5f}')
-        if "cls" in task:
+        if 'cls' in task:
             for dim in dims:
                 plot_heatmap(stats={'y_test': predict_info[dim]['target_list'], 'y_pred': predict_info[dim]['pred_tag_list']},
                              save_path=os.path.join(args.save_path, args.experiment_pref,

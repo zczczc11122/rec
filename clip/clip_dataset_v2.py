@@ -110,11 +110,11 @@ class ListFileDataSet(data.Dataset):
             title = self.vid2info[str(vid)]['title']
 
             dims = ['expression', 'material', 'person', 'style', 'topic']
-            en2_ch = {'expression': '表现形式', 'material': '素材', 'person': '人物', 'style': '风格', 'topic': '主题'}
+            en2_ch = {'expression': '表现形式', 'material': "素材", 'person': '人物', 'style': '风格', 'topic': '主题'}
             dim_label = []
             for dim in dims:
                 label_str = self.vid2info[str(vid)][dim]
-                labels = en2_ch[dim] + "维度标签为" + "、 ".join(label_str.split(self.sep))
+                labels = en2_ch[dim] + "维度标签为" + "、".join(label_str.split(self.sep))
                 dim_label.append(labels)
             text = ("，".join(dim_label) + "。" + "标题为" + title + "。").replace(" ", '').replace("\t", '，')
             label = None

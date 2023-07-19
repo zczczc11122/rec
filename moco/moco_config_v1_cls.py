@@ -104,7 +104,7 @@ parser.add_argument('--consistency-rampup', default=0, type=int, help='consisten
 parser.add_argument('--epochs', default=14, type=int, metavar='N',
                     help='number of total epochs to run')
 parser.add_argument('--batch-size', default=64, type=int, help='mini-batch size')
-# parser.add_argument('--batch-size', default=16, type=int, help='mini-batch size')
+#parser.add_argument('--batch-size', default=16, type=int, help='mini-batch size')
 parser.add_argument('--batch-size-val', default=64, type=int, help='mini-batch size')
 parser.add_argument('--dropout', '--do', default=0.3, type=float,
                     metavar='DO', help='dropout ratio (default: 0.5)')
@@ -147,7 +147,7 @@ parser.add_argument('--moco_resume', default='/mnt/bn/zc-model-nas-lq/model_resu
 
 parser.add_argument('--evaluate', default=False, type=bool, help='evaluate model on validation set')
 parser.add_argument('--save_path', type=str, default="/mnt/bn/zc-model-nas-lq/model_result/checkpoints_top_v1")
-parser.add_argument('--experiment_pref', type=str, default="20221019_train")
+parser.add_argument('--experiment_pref', type=str, default="20230221_train_mocov3_cls_v1")
 parser.add_argument('--start-epoch', default=0, type=int, help='manual epoch number (useful on restarts)')
 
 

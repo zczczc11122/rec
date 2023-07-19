@@ -34,7 +34,7 @@ parser.add_argument('--idx2class_file_person', type=str, help='person label path
 parser.add_argument('--idx2class_file_style', type=str, help='style label path',
                     default='./vocabulary/video_classification_class_id_style.txt')
 parser.add_argument('--idx2class_file_topic', type=str, help='topic label path',
-                    default='./vocabulary/video_classification_class_id_topic.txt')
+                    default='./vocabulary/video_classification_class_id_topical.txt')
 
 # ========================= distributed Configs =========================
 parser.add_argument('--local_rank', default=-1, type=int, help='node rank for distributed training')

@@ -55,7 +55,6 @@ class BertLMPredictionHead(nn.Module):
 
 class RegionFeatureRegression(nn.Module):
     "for MRM"
-
     def __init__(self, hidden_size, feat_dim):
         super().__init__()
         self.net = nn.Sequential(nn.Linear(hidden_size, hidden_size),
@@ -67,6 +66,7 @@ class RegionFeatureRegression(nn.Module):
         hidden = self.net(input_)
         output = self.out(hidden)
         return output
+
 
 def copyStateDict(state_dict):
     blocks_new_state_dict = OrderedDict()
@@ -105,7 +105,7 @@ class Uniter(nn.Module):
         self.audio_model = PANNs.Transfer_Cnn14()
         audio_model_path = args.audio_pretrian
         if not self.deploy:
-            audio_model_checkpoint = torch.load(audio_model_path, map_location=torch.device('cpu'))  # , map_location='cpu')
+            audio_model_checkpoint = torch.load(audio_model_path, map_location=torch.device('cpu'))#, map_location='cpu')
             self.audio_model.load_state_dict(audio_model_checkpoint['model'], strict=False)
 
         self.audio_fc = torch.nn.Linear(in_features=self.audio_model.audio_embedding_size, out_features=self.seq_dim)
@@ -127,7 +127,7 @@ class Uniter(nn.Module):
         self.feat_regress = RegionFeatureRegression(self.seq_dim, self.seq_dim)
 
         self.pooler = Pooler(self.seq_dim)
-        self.item_output = nn.Linear(self.seq_dim, 2)
+        self.itm_output = nn.Linear(self.seq_dim, 2)
 
         if args.se_gating_type == 'BNSEModule':
             self.se_gating = BNSEModule(self.seq_dim, self.se_reduction)
@@ -139,26 +139,26 @@ class Uniter(nn.Module):
             raise ValueError("args.se_gating_type is illegal")
 
         if args.classifier_type == 'hierarchicalClassifier':
-            self.classifier_expression = HierarchicalClassifier(self.fcn_dim, 256,
+            self.classifier_expression = HierarchicalClassifier(self.seq_dim, 256,
                                                                 label_dict['expression'], self.args.dropout)
-            self.classifier_material = HierarchicalClassifier(self.fcn_dim, 256,
+            self.classifier_material = HierarchicalClassifier(self.seq_dim, 256,
                                                               label_dict['material'], self.args.dropout)
-            self.classifier_person = HierarchicalClassifier(self.fcn_dim, 256,
+            self.classifier_person = HierarchicalClassifier(self.seq_dim, 256,
                                                             label_dict['person'], self.args.dropout)
-            self.classifier_style = HierarchicalClassifier(self.fcn_dim, 256,
+            self.classifier_style = HierarchicalClassifier(self.seq_dim, 256,
                                                            label_dict['style'], self.args.dropout)
-            self.classifier_topic = HierarchicalClassifier(self.fcn_dim, 256,
+            self.classifier_topic = HierarchicalClassifier(self.seq_dim, 256,
                                                            label_dict['topic'], self.args.dropout)
         elif args.classifier_type == 'hierarchicalClassifier_simple':
-            self.classifier_expression = HierarchicalClassifierSimple(self.fcn_dim, 256,
+            self.classifier_expression = HierarchicalClassifierSimple(self.seq_dim, 256,
                                                                       label_dict['expression'], self.args.dropout)
-            self.classifier_material = HierarchicalClassifierSimple(self.fcn_dim, 256,
+            self.classifier_material = HierarchicalClassifierSimple(self.seq_dim, 256,
                                                                     label_dict['material'], self.args.dropout)
-            self.classifier_person = HierarchicalClassifierSimple(self.fcn_dim, 256,
+            self.classifier_person = HierarchicalClassifierSimple(self.seq_dim, 256,
                                                                   label_dict['person'], self.args.dropout)
-            self.classifier_style = HierarchicalClassifierSimple(self.fcn_dim, 256,
+            self.classifier_style = HierarchicalClassifierSimple(self.seq_dim, 256,
                                                                  label_dict['style'], self.args.dropout)
-            self.classifier_topic = HierarchicalClassifierSimple(self.fcn_dim, 256,
+            self.classifier_topic = HierarchicalClassifierSimple(self.seq_dim, 256,
                                                                  label_dict['topic'], self.args.dropout)
         else:
             raise ValueError("args.classifier_type is illegal")
@@ -186,7 +186,7 @@ class Uniter(nn.Module):
             module.bias.data.zero_()
 
     def forward_embedding(self, vision, audio, title_input_ids, title_token_type_ids, title_attention_mask,
-                          ocr_input_ids, ocr_token_type_ids, ocr_attention_mask, return_vision_embedding=False):
+                ocr_input_ids, ocr_token_type_ids, ocr_attention_mask, return_vision_embedding=False):
         """Encoder, Pool, Predit
             expected shape of 'features': (n_batch, 5, input_dim)
         """
@@ -261,7 +261,7 @@ class Uniter(nn.Module):
         ocr_sequence_len = ocr_input_ids.size(1)
 
         sequence_output = self.forward_embedding(vision, audio, title_input_ids, title_token_type_ids, title_attention_mask,
-                                                 ocr_input_ids, ocr_token_type_ids, ocr_attention_mask)
+                                ocr_input_ids, ocr_token_type_ids, ocr_attention_mask)
 
         text_sequence_output = sequence_output[:, (1 + num_segments):
                                                   (1 + num_segments + title_sequence_len + ocr_sequence_len), :]
@@ -285,7 +285,7 @@ class Uniter(nn.Module):
                                                  ocr_input_ids, ocr_token_type_ids, ocr_attention_mask)
 
         pooled_output = self.pooler(sequence_output)
-        itm_scores = self.item_output(pooled_output)
+        itm_scores = self.itm_output(pooled_output)
         itm_loss = F.cross_entropy(itm_scores, itm_target, reduction='mean')
         return itm_loss
 
@@ -307,8 +307,8 @@ class Uniter(nn.Module):
 
     def forward_cls(self, vision, audio, title_input_ids, title_token_type_ids, title_attention_mask,
                     ocr_input_ids, ocr_token_type_ids, ocr_attention_mask):
-        sequence_output = self.forward_embedding(vision, audio, title_input_ids, title_token_type_ids,
-                                                 title_attention_mask,
+        sequence_output = self.forward_embedding(vision, audio,
+                                                 title_input_ids, title_token_type_ids, title_attention_mask,
                                                  ocr_input_ids, ocr_token_type_ids, ocr_attention_mask)
 
         cls_feats = self.pooler(sequence_output)
@@ -330,7 +330,7 @@ class Uniter(nn.Module):
 
     def forward(self, batch, task):
         """Encoder, Pool, Predit
-                    expected shape of 'features': (n_batch, 5, input_dim)
+            expected shape of 'features': (n_batch, 5, input_dim)
         """
         images = batch['images']
         audio = batch['audio']
@@ -413,7 +413,7 @@ class Uniter(nn.Module):
                                                   fusion_output_topic)}
                             }
 
-            return loss
+        return loss
 
     @property
     def input_size(self):

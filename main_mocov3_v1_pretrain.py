@@ -1,5 +1,5 @@
 import os
-# https://code.byted.org/zhaocong.zc/video_cls_template
+#https://code.byted.org/zhaocong.zc/video_cls_template
 os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3,4,5,6,7"
 import sys
 import time
@@ -267,11 +267,11 @@ def main_worker(local_rank):
                             pin_memory=True,
                             drop_last=True)
     test_loader = DataLoader(dataset=test_dataset,
-                             batch_size=val_data_loader_batch_size,
-                             num_workers=num_workers,
-                             sampler=test_sampler,
-                             pin_memory=True,
-                             drop_last=True)
+                            batch_size=val_data_loader_batch_size,
+                            num_workers=num_workers,
+                            sampler=test_sampler,
+                            pin_memory=True,
+                            drop_last=True)
 
     logger.info(f"train_dataloader{len(train_loader)}")
     logger.info(f"val_dataloader{len(val_loader)}")
@@ -286,7 +286,7 @@ def main_worker(local_rank):
     num_steps_per_epoch = len(train_dataset) // (args.batch_size * args.num_gpus)
     logger.info(f"num_steps_per_epoch{num_steps_per_epoch}")
 
-    optimizer = torch.optim.AdamW(params=model.module.parameters(), lr=args.lr,
+    optimizer = torch.optim.AdamW(model.module.parameters(), args.lr,
                                   weight_decay=1e-6)
 
     # arcface中优化器的写法
@@ -337,7 +337,7 @@ def main_worker(local_rank):
                 best_epoch = epoch
             _save_checkpoint({'epoch': epoch + 1, 'arch': args.arch,
                               'state_dict': model.state_dict(), 'best_acc': best_acc,
-                              'optimizer': optimizer.state_dict(),
+                              'optimizer':optimizer.state_dict(),
                               'cuda_rng_state': torch.cuda.get_rng_state(),
                               'torch_rng_state': torch.get_rng_state(),
                               'np_rng_state': np.random.get_state(),
@@ -348,7 +348,7 @@ def main_worker(local_rank):
 
 
 
-def train(train_loader, model, optimizer, epoch, local_rank, moco_m=0.00):
+def train(train_loader, model, optimizer, epoch, local_rank, moco_m=0.99):
     batch_time = AverageMeter()
     data_time = AverageMeter()
     losses = AverageMeter()
@@ -485,10 +485,10 @@ def adjust_moco_momentum(epoch, args):
 
 def adjust_learning_rate(optimizer, epoch, args):
     """Decays the learning rate with half-cycle cosine after warmup"""
-    if epoch < args.warmup_epochs:
-        lr = args.lr * epoch / args.warmup_epochs
+    if epoch < args.num_warmup_epochs:
+        lr = args.lr * epoch / args.num_warmup_epochs
     else:
-        lr = args.lr * 0.5 * (1. + math.cos(math.pi * (epoch - args.warmup_epochs) / (args.epochs - args.warmup_epochs)))
+        lr = args.lr * 0.5 * (1. + math.cos(math.pi * (epoch - args.num_warmup_epochs) / (args.epochs - args.num_warmup_epochs)))
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
     return lr
@@ -496,5 +496,5 @@ def adjust_learning_rate(optimizer, epoch, args):
 
 
 if __name__ == '__main__':
-    # python -m torch.distributed.launch --nproc_per_node=8 main_v1.py
+    #python -m torch.distributed.launch --nproc_per_node=8 main_v1.py
     main()

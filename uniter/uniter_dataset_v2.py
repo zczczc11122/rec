@@ -121,7 +121,7 @@ def random_word(tokens, vocab_range, mask):
 
             # 10% randomly change token to random token
             elif prob < 0.9:
-                tokens[i] = random.choice(list(range(*vocab_range)))
+                tokens[i] = random.choice(list(range(vocab_range)))
 
             # -> rest 10% randomly keep current token
 
@@ -193,8 +193,7 @@ class ListFileDataSet(data.Dataset):
         ocr_input_ids, ocr_input_ids_mask, ocr_txt_labels_mask, ocr_token_type_ids_mask, ocr_attention_mask_mask, \
         random_images, itm_target, mrfr_img_mask, \
         expression_label_ids, material_label_ids, person_label_ids, style_label_ids, topic_label_ids = self._get(record, random_record)
-
-        return vid, images, audio, \
+        return vid, images, audio,\
                title_input_ids, title_input_ids_mask, title_txt_labels_mask, title_token_type_ids_mask, title_attention_mask_mask,\
                ocr_input_ids, ocr_input_ids_mask, ocr_txt_labels_mask, ocr_token_type_ids_mask, ocr_attention_mask_mask,\
                random_images, itm_target, mrfr_img_mask, \
@@ -235,6 +234,7 @@ class ListFileDataSet(data.Dataset):
         z = torch.zeros(txt_len, dtype=torch.uint8)
         img_mask_tgt = torch.cat([z, img_mask], dim=0)
         return img_mask_tgt
+
 
     def _load_images(self, record, indices):
         images = []

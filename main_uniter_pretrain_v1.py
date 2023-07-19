@@ -474,12 +474,12 @@ def main_worker(local_rank):
             draw_curve(epoch)
 
 
-            if "cls" in args.task.split(","):
+            if 'cls' in args.task.split(","):
                 is_best = val_acc > best_acc
                 best_acc = max(val_acc, best_acc)
             else:
                 is_best = val_loss < best_loss
-                best_loss = max(val_loss, best_loss)
+                best_loss = min(val_loss, best_loss)
             if is_best:
                 best_epoch = epoch
             _save_checkpoint({'epoch': epoch + 1, 'arch': args.arch,
@@ -564,7 +564,7 @@ def train(train_loader, model, criterions, optimizers, schedulers, epoch, local_
                                                                        data_time=data_time,
                                                                        losses=losses,
                                                                        acces=acces))
-        #          break
+        #         break
     return losses.avg, acces.avg
 
 
@@ -754,7 +754,7 @@ def _export_ts_models():
              'ocr_attention_mask_mask': ocr_attention_mask,
              'random_images': None,
              'itm_target': None,
-             'cls_label': None,
+             "cls_label": None,
              'mrfr_img_mask': None
              }
 

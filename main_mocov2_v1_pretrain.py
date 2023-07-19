@@ -342,7 +342,7 @@ def main_worker(local_rank):
                 best_epoch = epoch
             _save_checkpoint({'epoch': epoch + 1, 'arch': args.arch,
                               'state_dict': model.state_dict(), 'best_acc': best_acc,
-                              'optimizer': optimizer.state_dict(),
+                              'optimizer':optimizer.state_dict(),
                               'cuda_rng_state': torch.cuda.get_rng_state(),
                               'torch_rng_state': torch.get_rng_state(),
                               'np_rng_state': np.random.get_state(),
@@ -368,6 +368,7 @@ def train(train_loader, model, criterion, optimizer, epoch, local_rank):
         if args.dist_type == "ddp":
             images[0] = images[0].cuda(local_rank)
             images[1] = images[1].cuda(local_rank)
+
         else:
             images[0] = images[0].cuda()
             images[1] = images[1].cuda()
@@ -387,7 +388,6 @@ def train(train_loader, model, criterion, optimizer, epoch, local_rank):
             batch_size = images[0].size(0)
             acces.update(acc.data.item(), batch_size)
             losses.update(loss.data.item(), batch_size)
-
 
 
         optimizer.zero_grad()

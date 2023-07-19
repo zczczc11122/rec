@@ -49,10 +49,10 @@ class ListFileDataSet(data.Dataset):
                  image_tmpl='{:05d}.jpg',
                  transform=None,
                  bert_path='',
-                 bert_max_len=79, # 对生成的文本数据进行统计，再设置
+                 bert_max_len=79, #对生成的文本数据进行统计，再设置
                  local_rank=-1,
                  sep=None
-                ):
+                 ):
         self.prefix_path = prefix_path
         self.info_file = info_file
         self.list_file = list_file

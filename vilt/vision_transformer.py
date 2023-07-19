@@ -21,7 +21,6 @@ import math
 import logging
 from functools import partial
 
-import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -788,6 +787,7 @@ class DistilledVisionTransformer(VisionTransformer):
         #                          [1,1],
         #                          [1,2]])
         #                ]
+
         non_valid_row_idx = [
             non_valid_idx[non_valid_idx[:, 0] == u] for u in unique_rows
         ]
@@ -820,12 +820,12 @@ class DistilledVisionTransformer(VisionTransformer):
                 )
 
         select = torch.cat(select, dim=0)
-        # select: np.array([[0,0],
-        #                  [0,1],
-        #                  [0,2],
-        #                  [1,0]
-        #                  [1,1]
-        #                  [1,2]])
+        # select : np.array([[0,0],
+        #                   [0,1],
+        #                   [0,2],
+        #                   [1,0]
+        #                   [1,1]
+        #                   [1,2]])
 
         x = x[select[:, 0], select[:, 1]].view(B, -1, C)
         x_mask = x_mask[select[:, 0], select[:, 1]].view(B, -1)

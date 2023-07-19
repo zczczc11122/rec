@@ -104,7 +104,7 @@ class MoCoV2(nn.Module):
         Momentum update of the key encoder
         """
         for param_q, param_k in zip(
-            self.vision_model_q_mlp.parameters(), self.vision_model_k_mlp.parameters()
+                self.vision_model_q_mlp.parameters(), self.vision_model_k_mlp.parameters()
         ):
             param_k.data = param_k.data * self.m + param_q.data * (1.0 - self.m)
 
@@ -119,7 +119,7 @@ class MoCoV2(nn.Module):
         assert self.K % batch_size == 0  # for simplicity
 
         # replace the keys at ptr (dequeue and enqueue)
-        self.queue[:, ptr : ptr + batch_size] = keys.T
+        self.queue[:, ptr: ptr + batch_size] = keys.T
         ptr = (ptr + batch_size) % self.K  # move pointer
 
         self.queue_ptr[0] = ptr
@@ -184,9 +184,9 @@ class MoCoV2(nn.Module):
             self._momentum_update_key_encoder()  # update the key encoder
 
             # shuffle for making use of BN
-            im_k, idx_unshuffle = self._batch_shuffle_ddp(vision_k)
+            vision_k, idx_unshuffle = self._batch_shuffle_ddp(vision_k)
 
-            k = self.vision_model_k_mlp(im_k)  # keys: NxC
+            k = self.vision_model_k_mlp(vision_k)  # keys: NxC
             k = nn.functional.normalize(k, dim=1)
 
             # undo shuffle
@@ -235,17 +235,17 @@ class MoCoV2(nn.Module):
 
     def summary(self):
         logger.info("""
-        Initializing Template Video Classify Framework
-            frame base model:       {}
-            num_segments:           {}
-            consensus_module:       {}
-            dropout_ratio:          {}
-            frame_feature_dim:      {}
-                """.format(self.args.arch,
-                           self.args.num_segments,
-                           self.args.consensus_type,
-                           self.args.dropout,
-                           self.vision_model_q.feature_dim))
+    Initializing Template Video Classify Framework
+        frame base model:       {}
+        num_segments:           {}
+        consensus_module:       {}
+        dropout_ratio:          {}
+        frame_feature_dim:      {}
+            """.format(self.args.arch,
+                       self.args.num_segments,
+                       self.args.consensus_type,
+                       self.args.dropout,
+                       self.vision_model_q.feature_dim))
 
 
 # utils

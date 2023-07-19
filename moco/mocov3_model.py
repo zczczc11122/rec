@@ -43,8 +43,8 @@ class MoCoV3(nn.Module):
             self.vision_model_q = Timesformer(self.args, deploy)
             self.vision_model_k = Timesformer(self.args, deploy)
         elif self.args.consensus_type == "videoswin":
-            # VideoSwin 论文中fnum_segments用的32，感觉太多了，我们还是用10
-            # 经分析，最好还是8的倍数，可见笔记分析
+            #VideoSwin 论文中fnum_segments用的32，感觉太多了，我们还是用10
+            #经分析，最好还是8的倍数，可见笔记分析
             assert self.args.num_segments % 8 == 0, 'videoswin 对应 num_segments 为8的倍数'
             self.vision_model_q = VideoSwin(self.args, deploy)
             self.vision_model_k = VideoSwin(self.args, deploy)
@@ -71,9 +71,9 @@ class MoCoV3(nn.Module):
         # predictor
         self.predictor = self._build_mlp(2, self.dim, self.mlp_dim, self.dim, False)
 
-        for param_b, param_m in zip(self.vision_model_q_mlp.parameters(), self.vision_model_k_mlp.parameters()):
-            param_m.data.copy_(param_b.data)  # initialize
-            param_m.requires_grad = False  # not update by gradient
+        for param_q, param_k in zip(self.vision_model_q_mlp.parameters(), self.vision_model_k_mlp.parameters()):
+            param_k.data.copy_(param_q.data)  # initialize
+            param_k.requires_grad = False  # not update by gradient
 
 
     def _build_mlp(self, num_layers, input_dim, mlp_dim, output_dim, last_bn=True):
@@ -97,8 +97,8 @@ class MoCoV3(nn.Module):
     @torch.no_grad()
     def _update_momentum_encoder(self, m):
         """Momentum update of the momentum encoder"""
-        for param_b, param_m in zip(self.vision_model_q_mlp.parameters(), self.vision_model_k_mlp.parameters()):
-            param_m.data = param_m.data * m + param_b.data * (1. - m)
+        for param_q, param_k in zip(self.vision_model_q_mlp.parameters(), self.vision_model_k_mlp.parameters()):
+            param_k.data = param_k.data * m + param_q.data * (1. - m)
 
     def contrastive_loss(self, q, k):
         # normalize
@@ -151,17 +151,17 @@ class MoCoV3(nn.Module):
 
     def summary(self):
         logger.info("""
-        Initializing Template Video Classify Framework
-            frame base model:       {}
-            num_segments:           {}
-            consensus_module:       {}
-            dropout_ratio:          {}
-            frame_feature_dim:      {}
-                """.format(self.args.arch,
-                           self.args.num_segments,
-                           self.args.consensus_type,
-                           self.args.dropout,
-                           self.vision_model_q.feature_dim))
+    Initializing Template Video Classify Framework
+        frame base model:       {}
+        num_segments:           {}
+        consensus_module:       {}
+        dropout_ratio:          {}
+        frame_feature_dim:      {}
+            """.format(self.args.arch,
+                       self.args.num_segments,
+                       self.args.consensus_type,
+                       self.args.dropout,
+                       self.vision_model_q.feature_dim))
 
 
 # utils

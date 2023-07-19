@@ -1,5 +1,5 @@
 import os
-# https://code.byted.org/zhaocong.zc/video_cls_template
+#https://code.byted.org/zhaocong.zc/video_cls_template
 os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3,4,5,6,7"
 import sys
 import time
@@ -268,11 +268,11 @@ def main_worker(local_rank):
                             pin_memory=True,
                             drop_last=True)
     test_loader = DataLoader(dataset=test_dataset,
-                             batch_size=val_data_loader_batch_size,
-                             num_workers=num_workers,
-                             sampler=test_sampler,
-                             pin_memory=True,
-                             drop_last=True)
+                            batch_size=val_data_loader_batch_size,
+                            num_workers=num_workers,
+                            sampler=test_sampler,
+                            pin_memory=True,
+                            drop_last=True)
 
     logger.info(f"train_dataloader{len(train_loader)}")
     logger.info(f"val_dataloader{len(val_loader)}")
@@ -341,7 +341,7 @@ def main_worker(local_rank):
                 best_epoch = epoch
             _save_checkpoint({'epoch': epoch + 1, 'arch': args.arch,
                               'state_dict': model.state_dict(), 'best_acc': best_acc,
-                              'optimizer': optimizer.state_dict(),
+                              'optimizer':optimizer.state_dict(),
                               'cuda_rng_state': torch.cuda.get_rng_state(),
                               'torch_rng_state': torch.get_rng_state(),
                               'np_rng_state': np.random.get_state(),
@@ -349,6 +349,7 @@ def main_worker(local_rank):
                              is_best,
                              '{}_checkpoint.pth.tar'.format('last'))
             logger.info(f'best epoch: {best_epoch}\t val_acc: {best_acc}')
+
 
 
 def train(train_loader, model, criterion, optimizer, epoch, local_rank):
@@ -366,6 +367,7 @@ def train(train_loader, model, criterion, optimizer, epoch, local_rank):
         if args.dist_type == "ddp":
             images[0] = images[0].cuda(local_rank)
             images[1] = images[1].cuda(local_rank)
+
         else:
             images[0] = images[0].cuda()
             images[1] = images[1].cuda()
@@ -386,6 +388,7 @@ def train(train_loader, model, criterion, optimizer, epoch, local_rank):
             acces.update(acc.data.item(), batch_size)
             losses.update(loss.data.item(), batch_size)
 
+
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
@@ -401,8 +404,7 @@ def train(train_loader, model, criterion, optimizer, epoch, local_rank):
                         'Data {data_time.val:.3f} ({data_time.avg:.3f})\t'
                         'Loss {losses.val:.4f} ({losses.avg:.4f})\t'
                         'Acc {acces.val:.3f} ({acces.avg:.3f})'.format(epoch=epoch, step=step, len=len(train_loader),
-                                                                       batch_size=batch_size, local_rank=local_rank,
-                                                                       nprocs=args.nprocs,
+                                                                       batch_size=batch_size, local_rank=local_rank, nprocs=args.nprocs,
                                                                        b_lr=optimizer.param_groups[-1]['lr'],
                                                                        batch_time=batch_time,
                                                                        data_time=data_time,
@@ -446,8 +448,7 @@ def validate(val_loader, model, criterion, epoch, data_type, local_rank):
                     'batch: {batch_size} local_rank/nprocs: {local_rank}/{nprocs}\t'
                     'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
                     'Loss {losses.val:.4f} ({losses.avg:.4f})\t'
-                    'Acc {acces.val:.3f} ({acces.avg:.3f})'.format(data_type=data_type, epoch=epoch,
-                                                                   total_epoch=args.epochs,
+                    'Acc {acces.val:.3f} ({acces.avg:.3f})'.format(data_type=data_type, epoch=epoch, total_epoch=args.epochs,
                                                                    batch_size=batch_size, local_rank=local_rank,
                                                                    nprocs=args.nprocs,
                                                                    batch_time=batch_time,
@@ -481,5 +482,5 @@ def copyStateDict(state_dict):
 
 
 if __name__ == '__main__':
-    # python -m torch.distributed.launch --nproc_per_node=8 main_v1.py
+    #python -m torch.distributed.launch --nproc_per_node=8 main_v1.py
     main()

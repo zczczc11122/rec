@@ -130,8 +130,8 @@ parser.add_argument('--moco_resume', default='/mnt/bn/zc-model-nas-lq/model_resu
                     help='path to latest checkpoint (default: none)')
 
 parser.add_argument('--evaluate', default=False, type=bool, help='evaluate model on validation set')
-parser.add_argument('--save_path', type=str, default="./checkpoints_top_v1")
-parser.add_argument('--experiment_pref', type=str, default="v2_20221031_1_train")
+parser.add_argument('--save_path', type=str, default="/mnt/bn/zc-model-nas-lq/model_result/checkpoints_top_v1")
+parser.add_argument('--experiment_pref', type=str, default="20230220_train_mocov3_cls_v2")
 parser.add_argument('--start-epoch', default=0, type=int, help='manual epoch number (useful on restarts)')
 
 

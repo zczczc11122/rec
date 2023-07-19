@@ -25,14 +25,14 @@ class CLIP(nn.Module):
             for i in range(len(id2_label)):
                 label_list.append(f"视频标签为{id2_label[i]}")
             self.tokenizer = BertTokenizer.from_pretrained(args.bert_path)
-            text_idx = self.tokenizer.encode_plus(label_list,
-                                                        max_length=10,
-                                                        padding='max_length',
-                                                        truncation=True,
-                                                        return_tensors='pt')
-            self.label_input_ids = torch.LongTensor(text_idx['input_ids'])
-            self.label_token_type_ids = torch.LongTensor(text_idx['token_type_ids'])
-            self.label_attention_mask = torch.LongTensor(text_idx['attention_mask'])
+            text_idx = self.tokenizer.batch_encode_plus(label_list,
+                                                            max_length=10,
+                                                            padding='max_length',
+                                                            truncation=True,
+                                                            return_tensors='pt')
+            self.label_input_ids = text_idx['input_ids']
+            self.label_token_type_ids = text_idx['token_type_ids']
+            self.label_attention_mask = text_idx['attention_mask']
 
         if self.args.consensus_type == "netvlad":
             self.vision_model = TSNNetVLADSE(self.args)

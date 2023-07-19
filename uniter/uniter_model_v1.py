@@ -137,7 +137,7 @@ class Uniter(nn.Module):
         self.feat_regress = RegionFeatureRegression(self.seq_dim, self.seq_dim)
 
         self.pooler = Pooler(self.seq_dim)
-        self.item_output = nn.Linear(self.seq_dim, 2)
+        self.itm_output = nn.Linear(self.seq_dim, 2)
 
         if args.se_gating_type == 'BNSEModule':
             self.se_gating = BNSEModule(self.seq_dim, self.se_reduction)
@@ -292,7 +292,7 @@ class Uniter(nn.Module):
                                                  ocr_input_ids, ocr_token_type_ids, ocr_attention_mask)
 
         pooled_output = self.pooler(sequence_output)
-        itm_scores = self.item_output(pooled_output)
+        itm_scores = self.itm_output(pooled_output)
         itm_loss = F.cross_entropy(itm_scores, itm_target, reduction='mean')
         return itm_loss
 
@@ -313,9 +313,9 @@ class Uniter(nn.Module):
         return mrfr_loss
 
     def forward_cls(self, vision, audio, title_input_ids, title_token_type_ids, title_attention_mask,
-                    ocr_input_ids, ocr_token_type_ids, ocr_attention_mask, itm_target):
-        sequence_output = self.forward_embedding(vision, audio, title_input_ids, title_token_type_ids,
-                                                 title_attention_mask,
+                    ocr_input_ids, ocr_token_type_ids, ocr_attention_mask):
+        sequence_output = self.forward_embedding(vision, audio,
+                                                 title_input_ids, title_token_type_ids, title_attention_mask,
                                                  ocr_input_ids, ocr_token_type_ids, ocr_attention_mask)
 
         cls_feats = self.pooler(sequence_output)
@@ -365,7 +365,8 @@ class Uniter(nn.Module):
                                             ocr_input_ids,
                                             ocr_token_type_ids_mask,
                                             ocr_attention_mask_mask,
-                                            itm_target)
+                                            itm_target
+                                            )
                 loss += itm_loss
             if i == "mrfr":
                 mrfr_loss = self.forward_mrfr(images, audio,
@@ -387,9 +388,8 @@ class Uniter(nn.Module):
                                               ocr_attention_mask_mask
                                               )
                 return cls_output
-            return loss
 
-
+        return loss
 
     @property
     def input_size(self):
